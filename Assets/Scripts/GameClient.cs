@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Grpc.Core;
 using Newtonsoft.Json;
@@ -7,13 +6,11 @@ using SabberStoneContract.Model;
 using SabberStoneCore.Kettle;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnityEngine.UI;
 
 using static GameServerService;
-using UnityEngine.UI;
 
 public class GameClient : MonoBehaviour
 {
@@ -31,7 +28,16 @@ public class GameClient : MonoBehaviour
 
     private GameClientState _gameClientState;
 
-    public GameClientState GameClientState => _gameClientState;
+    public GameClientState GameClientState
+    {
+        get => _gameClientState;
+        private set
+        {
+            Debug.Log($"SetClientState {value}");
+            _gameClientState = value;
+            DoUpdatedGfx = true;
+        }
+    }
 
     private IClientStreamWriter<GameServerStream> _writeStream;
 
@@ -44,6 +50,14 @@ public class GameClient : MonoBehaviour
     private int _playerId;
 
     public int PlayerId => _playerId;
+
+    private List<UserInfo> _userInfos;
+
+    private TaskCompletionSource<object> registerWaiter;
+
+    public UserInfo MyUserInfo => _userInfos.FirstOrDefault(p => p.PlayerId == _playerId);
+
+    public UserInfo OpUserInfo => _userInfos.FirstOrDefault(p => p.PlayerId != _playerId);
 
     public ConcurrentQueue<IPowerHistoryEntry> HistoryEntries { get; private set; }
 
@@ -83,10 +97,11 @@ public class GameClient : MonoBehaviour
     void Start()
     {
         _target = $"127.0.0.1:{Port}";
-        SetClientState(_gameClientState = GameClientState.None);
+        GameClientState = GameClientState.None;
 
         _gameId = -1;
         _playerId = -1;
+        _userInfos = new List<UserInfo>();
 
         HistoryEntries = new ConcurrentQueue<IPowerHistoryEntry>();
         PowerOptionList = new List<PowerOption>();
@@ -194,31 +209,6 @@ public class GameClient : MonoBehaviour
         Register(AccountName, AccountPassword);
     }
 
-    private void Register(string accountName, string accountPsw)
-    {
-        if (_gameClientState != GameClientState.Connected)
-        {
-            Debug.Log("GameClient isn't connected.");
-            return;
-        }
-
-        var authReply = _client.Authentication(new AuthRequest { AccountName = accountName, AccountPsw = accountPsw });
-
-        if (!authReply.RequestState)
-        {
-            Debug.Log("Bad RegisterRequest.");
-            return;
-        }
-
-        _sessionId = authReply.SessionId;
-        _sessionToken = authReply.SessionToken;
-
-        GameServerChannel();
-
-        Debug.Log($"Register done.");
-
-    }
-
     public void OnClickStats()
     {
         Debug.Log($"Not implemented: OnClickStats");
@@ -228,35 +218,6 @@ public class GameClient : MonoBehaviour
     {
         Debug.Log($"OnClickQueue");
         Queue(GameType.Normal, DeckType.Random, null);
-    }
-
-    private void Queue(GameType gameType = GameType.Normal, DeckType deckType = DeckType.Random, string deckData = null)
-    {
-        if (_gameClientState != GameClientState.Registred)
-        {
-            Debug.Log("GameClient isn't registred.");
-            return;
-        }
-
-        var queueReply = _client.GameQueue(
-            new QueueRequest
-            {
-                GameType = gameType,
-                DeckType = deckType,
-                DeckData = deckData ?? string.Empty
-            },
-            new Metadata
-            {
-                new Metadata.Entry("token", _sessionToken)
-            });
-
-        if (!queueReply.RequestState)
-        {
-            Debug.Log("Bad QueueRequest.");
-            return;
-        }
-
-        SetClientState(GameClientState.Queued);
     }
 
     public void OnClickInvite()
@@ -272,18 +233,13 @@ public class GameClient : MonoBehaviour
     public void OnClickYesInvite()
     {
         Debug.Log($"OnClickYesInvite");
-        Invitation(true);
+        SendInvitationReply(true);
     }
 
     public void OnClickNoInvite()
     {
         Debug.Log($"OnClickNoInvite");
-        Invitation(false);
-    }
-
-    private void Invitation(bool accept)
-    {
-        WriteGameData(MsgType.Invitation, accept, new GameData() { GameId = _gameId, PlayerId = _playerId, GameDataType = GameDataType.None });
+        SendInvitationReply(false);
     }
 
     public void OnClickConnect()
@@ -296,163 +252,6 @@ public class GameClient : MonoBehaviour
         {
             Disconnect();
         }
-    }
-
-    public void Connect()
-    {
-        _channel = new Channel(_target, ChannelCredentials.Insecure);
-        _client = new GameServerServiceClient(_channel);
-        SetClientState(GameClientState.Connected);
-    }
-
-    public async void Disconnect()
-    {
-        if (_writeStream != null)
-        {
-            await _writeStream.CompleteAsync();
-        }
-
-        SetClientState(GameClientState.None);
-
-        await _channel.ShutdownAsync();
-
-        DoUpdatedGfx = true;
-    }
-
-    private void SetClientState(GameClientState gameClientState)
-    {
-        Debug.Log($"SetClientState {gameClientState}");
-        _gameClientState = gameClientState;
-        DoUpdatedGfx = true;
-    }
-
-    public void SendPowerChoicesChoice(PowerChoices powerChoices)
-    {
-        var powerChoicesChoiceString = JsonConvert.SerializeObject(powerChoices);
-        WriteGameData(MsgType.InGame, true, new GameData() { GameId = _gameId, PlayerId = _playerId, GameDataType = GameDataType.PowerChoices, GameDataObject = powerChoicesChoiceString });
-        PowerChoices = null;
-    }
-
-    public void SendPowerOptionChoice(PowerOptionChoice powerOptionChoice)
-    {
-        var powerOptionChoiceString = JsonConvert.SerializeObject(powerOptionChoice);
-        WriteGameData(MsgType.InGame, true, new GameData() { GameId = _gameId, PlayerId = _playerId, GameDataType = GameDataType.PowerOptions, GameDataObject = powerOptionChoiceString });
-        PowerOptionList.Clear();
-    }
-
-    public async void GameServerChannel()
-    {
-        using (var call = _client.GameServerChannel(headers: new Metadata { new Metadata.Entry("token", _sessionToken) }))
-        {
-            // listen to game server
-            var response = Task.Run(async () =>
-            {
-                while (await call.ResponseStream.MoveNext(CancellationToken.None) && _gameClientState != GameClientState.None)
-                {
-                    ProcessChannelMessage(call.ResponseStream.Current);
-                };
-            });
-
-            _writeStream = call.RequestStream;
-            WriteGameServerStream(MsgType.Initialisation, true, string.Empty);
-
-            await response;
-        }
-    }
-
-    private void ProcessChannelMessage(GameServerStream current)
-    {
-        if (!current.MessageState)
-        {
-            Debug.Log($"Failed messageType {current.MessageType}, '{current.Message}'!");
-            return;
-        }
-
-        GameData gameData = null;
-        if (current.Message != string.Empty)
-        {
-            gameData = JsonConvert.DeserializeObject<GameData>(current.Message);
-            Debug.Log($"GameData[Id:{gameData.GameId},Player:{gameData.PlayerId}]: {gameData.GameDataType} received");
-        }
-        else
-        {
-            Debug.Log($"Message[{current.MessageState},{current.MessageType}]: received.");
-        }
-
-        switch (current.MessageType)
-        {
-            case MsgType.Initialisation:
-                SetClientState(GameClientState.Registred);
-                break;
-
-            case MsgType.Invitation:
-                SetClientState(GameClientState.Invited);
-                _gameId = gameData.GameId;
-                _playerId = gameData.PlayerId;
-                //if (_isBot)
-                //{
-                //    Invitation(true);
-                //}
-                break;
-
-            case MsgType.InGame:
-                switch (gameData.GameDataType)
-                {
-                    case GameDataType.None:
-                        SetClientState(GameClientState.InGame);
-                        break;
-
-                    case GameDataType.PowerHistory:
-                        List<IPowerHistoryEntry> powerHistoryEntries = JsonConvert.DeserializeObject<List<IPowerHistoryEntry>>(gameData.GameDataObject, new PowerHistoryConverter());
-                        powerHistoryEntries.ForEach(p => HistoryEntries.Enqueue(p));
-                        //gameController.ReadHistory();
-                        break;
-
-                    case GameDataType.PowerChoices:
-                        PowerChoices = JsonConvert.DeserializeObject<PowerChoices>(gameData.GameDataObject);
-                        //gameController.ReadPowerChoices();
-                        break;
-
-                    case GameDataType.PowerOptions:
-                        var powerOptions = JsonConvert.DeserializeObject<PowerOptions>(gameData.GameDataObject);
-                        if (powerOptions.PowerOptionList != null &&
-                            powerOptions.PowerOptionList.Count > 0)
-                        {
-                            Debug.Log($"PowerOptions: {powerOptions.PowerOptionList.Count}");
-                            PowerOptionList = powerOptions.PowerOptionList;
-                            //gameController.ReadPowerOptions();
-                            break;
-                        }
-                        break;
-
-                    case GameDataType.Result:
-                        Debug.Log($" ... ");
-                        SetClientState(GameClientState.Registred);
-                        break;
-                }
-                break;
-        }
-    }
-
-    public async void WriteGameServerStream(MsgType messageType, bool messageState, string message)
-    {
-        if (_writeStream == null)
-        {
-            Debug.Log($"There is no write stream currently.");
-            return;
-        }
-
-        await _writeStream.WriteAsync(new GameServerStream
-        {
-            MessageType = messageType,
-            MessageState = messageState,
-            Message = message
-        });
-    }
-
-    public void WriteGameData(MsgType messageType, bool messageState, GameData gameData)
-    {
-        WriteGameServerStream(messageType, messageState, JsonConvert.SerializeObject(gameData));
     }
 
     public void SetActiveChildren(Transform transform, bool value)
@@ -483,4 +282,243 @@ public class GameClient : MonoBehaviour
             DestroyImmediate(child.gameObject);
         }
     }
+
+    #region GAMECLIENT PART
+
+    public void Connect()
+    {
+        _channel = new Channel(_target, ChannelCredentials.Insecure);
+        _client = new GameServerServiceClient(_channel);
+        GameClientState = GameClientState.Connected;
+    }
+
+    public async Task Register(string accountName, string accountPsw)
+    {
+        if (GameClientState != GameClientState.Connected)
+        {
+            Debug.LogWarning("Client isn't connected.");
+            return;
+        }
+
+        var authReply = _client.Authentication(new AuthRequest { AccountName = accountName, AccountPsw = accountPsw });
+
+        if (!authReply.RequestState)
+        {
+            Debug.LogWarning("Bad RegisterRequest.");
+            return;
+        }
+
+        _sessionId = authReply.SessionId;
+        _sessionToken = authReply.SessionToken;
+
+        GameServerChannel();
+
+        registerWaiter = new TaskCompletionSource<object>();
+        await registerWaiter.Task;
+
+        Debug.Log($"Register done.");
+    }
+
+    //public void MatchGame()
+    //{
+    //    if (GameClientState != GameClientState.InGame)
+    //    {
+    //        Log.Warn("Client isn't in a game.");
+    //        return;
+    //    }
+
+    //    var matchGameReply = _client.MatchGame(new MatchGameRequest { GameId = _gameId }, new Metadata { new Metadata.Entry("token", _sessionToken) });
+
+    //    if (!matchGameReply.RequestState)
+    //    {
+    //        Log.Warn("Bad MatchGameRequest.");
+    //        return;
+    //    }
+
+    //    // TODO do something with the game object ...
+    //    Log.Info($"Got match game successfully.");
+    //}
+
+    public async void GameServerChannel()
+    {
+        using (var call = _client.GameServerChannel(headers: new Metadata { new Metadata.Entry("token", _sessionToken) }))
+        {
+            // listen to game server
+            var response = Task.Run(async () =>
+            {
+                while (await call.ResponseStream.MoveNext(CancellationToken.None) && GameClientState != GameClientState.None)
+                {
+                    try
+                    {
+                        ProcessChannelMessage(call.ResponseStream.Current);
+                    }
+                    catch
+                    {
+                        ;
+                    }
+
+                };
+            });
+
+            _writeStream = call.RequestStream;
+            await WriteGameServerStream(MsgType.Initialisation, true, string.Empty);
+
+            //await call.RequestStream.CompleteAsync();
+            await response;
+        }
+    }
+
+    public async Task WriteGameServerStream(MsgType messageType, bool messageState, string message)
+    {
+        if (_writeStream == null)
+        {
+            Debug.Log($"There is no write stream currently.");
+            return;
+        }
+
+        await _writeStream.WriteAsync(new GameServerStream
+        {
+            MessageType = messageType,
+            MessageState = messageState,
+            Message = message
+        });
+
+        Debug.Log($"{AccountName} sent [{messageType}]");
+    }
+
+    public void WriteGameData(MsgType messageType, bool messageState, GameData gameData)
+    {
+        Debug.Log($"writing gamedata {messageType}");
+        WriteGameServerStream(messageType, messageState, JsonConvert.SerializeObject(gameData));
+    }
+
+    public void SendInvitationReply(bool accept)
+    {
+        WriteGameData(MsgType.Invitation, accept, new GameData { GameId = _gameId, PlayerId = _playerId, GameDataType = GameDataType.None });
+    }
+
+    public void SendPowerChoicesChoice(PowerChoices powerChoices)
+    {
+        // clear before sent ...
+        PowerChoices = null;
+        WriteGameData(MsgType.InGame, true, new GameData() { GameId = _gameId, PlayerId = _playerId, GameDataType = GameDataType.PowerChoices, GameDataObject = JsonConvert.SerializeObject(powerChoices) });
+    }
+
+    public void SendPowerOptionChoice(PowerOptionChoice powerOptionChoice)
+    {
+        // clear before sent ...
+        PowerOptionList.Clear();
+        WriteGameData(MsgType.InGame, true, new GameData() { GameId = _gameId, PlayerId = _playerId, GameDataType = GameDataType.PowerOptions, GameDataObject = JsonConvert.SerializeObject(powerOptionChoice) });
+    }
+
+
+    public async void Disconnect()
+    {
+        if (_writeStream != null)
+        {
+            await _writeStream.CompleteAsync();
+        }
+
+        GameClientState = GameClientState.None;
+
+        await _channel.ShutdownAsync();
+
+        DoUpdatedGfx = true;
+    }
+
+    private void ProcessChannelMessage(GameServerStream current)
+    {
+        if (!current.MessageState)
+        {
+            Debug.Log($"Failed messageType {current.MessageType}, '{current.Message}'!");
+            return;
+        }
+
+        GameData gameData = null;
+        if (current.Message != string.Empty)
+        {
+            gameData = JsonConvert.DeserializeObject<GameData>(current.Message);
+            //Debug.Log($"GameData[Id:{gameData.GameId},Player:{gameData.PlayerId}]: {gameData.GameDataType} received");
+        }
+        else
+        {
+            //Debug.Log($"Message[{current.MessageState},{current.MessageType}]: received.");
+        }
+
+        switch (current.MessageType)
+        {
+            case MsgType.Initialisation:
+                GameClientState = GameClientState.Registred;
+                break;
+
+            case MsgType.Invitation:
+                _gameId = gameData.GameId;
+                _playerId = gameData.PlayerId;
+                GameClientState = GameClientState.Invited;
+                break;
+
+            case MsgType.InGame:
+                switch (gameData.GameDataType)
+                {
+                    case GameDataType.Initialisation:
+                        _userInfos = JsonConvert.DeserializeObject<List<UserInfo>>(gameData.GameDataObject);
+                        GameClientState = GameClientState.InGame;
+                        Debug.Log($"Initialized game against account {OpUserInfo.AccountName}!");
+                        break;
+
+                    case GameDataType.PowerHistory:
+                        List<IPowerHistoryEntry> powerHistoryEntries = JsonConvert.DeserializeObject<List<IPowerHistoryEntry>>(gameData.GameDataObject, new PowerHistoryConverter());
+                        powerHistoryEntries.ForEach(p => HistoryEntries.Enqueue(p));
+                        break;
+
+                    case GameDataType.PowerChoices:
+                        PowerChoices = JsonConvert.DeserializeObject<PowerChoices>(gameData.GameDataObject);
+                        break;
+
+                    case GameDataType.PowerOptions:
+                        var powerOptions = JsonConvert.DeserializeObject<PowerOptions>(gameData.GameDataObject);
+                        PowerOptionList = powerOptions.PowerOptionList;
+                        break;
+
+                    case GameDataType.Result:
+
+                        //Log.Info($" ... ");
+                        GameClientState = GameClientState.Registred;
+                        break;
+                }
+                break;
+        }
+    }
+
+    private void Queue(GameType gameType = GameType.Normal, DeckType deckType = DeckType.Random, string deckData = null)
+    {
+        if (_gameClientState != GameClientState.Registred)
+        {
+            Debug.Log("GameClient isn't registred.");
+            return;
+        }
+
+        var queueReply = _client.GameQueue(
+            new QueueRequest
+            {
+                GameType = gameType,
+                DeckType = deckType,
+                DeckData = deckData ?? string.Empty
+            },
+            new Metadata
+            {
+                new Metadata.Entry("token", _sessionToken)
+            });
+
+        if (!queueReply.RequestState)
+        {
+            Debug.Log("Bad QueueRequest.");
+            return;
+        }
+
+        GameClientState = GameClientState.Queued;
+    }
+
+    #endregion
+
 }

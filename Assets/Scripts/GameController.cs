@@ -36,7 +36,7 @@ public class GameController : MonoBehaviour
 
     private EntityExt defendingEntity;
 
-    private Transform gridParent, _mainGame;
+    private Transform gridParent, _mainGame, _myChoicesPanel;
 
     //private ScrollRect consoleScrollRect;
 
@@ -75,19 +75,22 @@ public class GameController : MonoBehaviour
         var rootGameObjectList = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
         var boardCanvas = rootGameObjectList.Find(p => p.name == "BoardCanvas");
         _mainGame = boardCanvas.transform.Find("MainGame");
+        var myChoices = _mainGame.transform.Find("MyChoices");
+        _myChoicesPanel = myChoices.transform.Find("MyChoicesPanel");
+        _myChoicesPanel.gameObject.SetActive(false);
         _endTurnButton = _mainGame.transform.Find("EndTurnButton").GetComponent<Button>();
         _endTurnButton.interactable = false;
 
         _updatingIndex = 0;
 
-        InvokeRepeating("ReadHistory", 0f, 0.1f);
+        //InvokeRepeating("ReadHistory", 0f, 0.1f);
         //InvokeRepeating("ReadPowerOptions", 0f, 2f);
     }
 
     public void Update()
     {
         _updatingIndex++;
-        if (_updatingIndex > 24)
+        if (_updatingIndex > 10)
         {
             ReadHistory();
             _updatingIndex = 0;
@@ -172,12 +175,25 @@ public class GameController : MonoBehaviour
     {
         if (_gameClient.PowerChoices == null)
         {
+            _myChoicesPanel.gameObject.SetActive(false);
             return false;
         }
 
-        Debug.Log($"Current PowerChoices: {_gameClient.PowerChoices.ChoiceType} with {_gameClient.PowerChoices.Entities.Count} entities");
+        //Debug.Log($"Current PowerChoices: {_gameClient.PowerChoices.ChoiceType} with {_gameClient.PowerChoices.Entities.Count} entities");
 
         PowerChoicesText.text = $"{_gameClient.PowerChoices.ChoiceType}[{_gameClient.PowerChoices.Entities.Count}]";
+
+        _myChoicesPanel.gameObject.SetActive(true);
+
+        _gameClient.PowerChoices.Entities.ForEach(p => {
+
+            if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
+            {
+                throw new Exception($"Can't find entity with the id {p} in our dictionary!");
+            }
+
+            createCardIn(_myChoicesPanel, CardPrefab, entityExt);
+        });
 
         return true;
     }
@@ -191,7 +207,7 @@ public class GameController : MonoBehaviour
             return;
         }
 
-        Debug.Log($"Current PowerOptions: {_gameClient.PowerOptionList.Count()}");
+        //Debug.Log($"Current PowerOptions: {_gameClient.PowerOptionList.Count()}");
 
         PowerOptionsText.text = _gameClient.PowerOptionList.Count().ToString();
 
@@ -212,6 +228,9 @@ public class GameController : MonoBehaviour
         {
             var powerChoicesChoice = _gameClient.PowerChoices;
             var powerChoicesId = _random.Next(powerChoicesChoice.Entities.Count);
+
+            _myChoicesPanel.gameObject.SetActive(false);
+
             Debug.Log($"powerChoicesChoice => choices:{powerChoicesId}");
             _gameClient.SendPowerChoicesChoice(new PowerChoices() { ChoiceType = powerChoicesChoice.ChoiceType, Entities = new List<int>() { powerChoicesChoice.Entities[powerChoicesId] } });
             return;
@@ -224,6 +243,12 @@ public class GameController : MonoBehaviour
         }
 
         var powerOptionChoice = RandomPowerOption(_gameClient.PowerOptionList);
+
+        // retry to get sme movements
+        if (_gameClient.PowerOptionList.Count() > 1 && powerOptionChoice.PowerOption.OptionType == OptionType.END_TURN)
+        {
+            powerOptionChoice = RandomPowerOption(_gameClient.PowerOptionList);
+        }
 
         Debug.Log($"powerOptionChoice => " +
                   $"target:{powerOptionChoice.Target}, " +
@@ -477,7 +502,7 @@ public class GameController : MonoBehaviour
             && entityExt.CardType != CardType.SPELL
             && entityExt.CardType != CardType.WEAPON)
         {
-            throw new Exception($"No zone changes currently implemented for {entityExt.CardType}!");
+            throw new Exception($"No zone changes currently implemented for {entityExt.CardType} from {prevZone} to {nextZone}!");
         }
 
         switch (prevZone)
@@ -624,6 +649,16 @@ public class GameController : MonoBehaviour
                 break;
         }
 
+    }
+
+    private BasicGen createCardIn(Transform location, GameObject cardPrefab, EntityExt entityExt)
+    {
+        var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
+        var cardGen = gameObject.GetComponent<CardGen>();
+        cardGen.Generate(entityExt);
+        entityExt.GameObjectScript = cardGen;
+        location.GetComponent<CardContainer>().Add(gameObject);
+        return cardGen;
     }
 
     private BasicGen createCardIn(string location, GameObject cardPrefab, EntityExt entityExt)
@@ -787,7 +822,7 @@ public class GameController : MonoBehaviour
             }
         }
 
-        //Debug.Log($"Can't find this card id '{CardId}'!");
+        Debug.Log($"Can't find this card id '{CardId}'!");
         return null;
     }
 }
