@@ -64,7 +64,7 @@ public class GameClient : MonoBehaviour
     public PowerChoices PowerChoices { get; private set; }
 
     public List<PowerOption> PowerOptionList { get; private set; }
-    
+
     // unity gui declaration stuff
 
     private Text clientStateText, connectButtonText, waitingTimeText;
@@ -90,8 +90,6 @@ public class GameClient : MonoBehaviour
     private List<GameObject> userDataEntries;
 
     private GameController gameController;
-
-    public bool DebugFlag = true;
 
     // Start is called before the first frame update
     void Start()
@@ -167,36 +165,29 @@ public class GameClient : MonoBehaviour
             connectButtonText.text = _gameClientState == GameClientState.None ? "CONNECT" : "DISCONNECT";
             connectButtonImage.color = _gameClientState == GameClientState.None ? Color.green : Color.red;
 
-            ClearChildren(userDataContentParent);
-            
+            //ClearChildren(userDataContentParent);
+
             // TODO
-            //UserInfos.ForEach(user =>
+            //_userInfos.ForEach(user =>
             //{
             //    var userEntryGameObject = Instantiate(UserDataEntry, userDataContentParent);
-            //    userEntryGameObject.transform.Find("Text").GetComponent<Text>().text = $"{user.Id},{user.AccountName},{user.UserState},{user.GameId}";
+            //    userEntryGameObject.transform.Find("Text").GetComponent<Text>().text = $"{user.PlayerId},{user.AccountName},{user.UserState},{user.GameId}";
             //});
 
-            if (DebugFlag)
-            {
-                menuCanvas.SetActive(false);
-                board.SetActive(true);
-                boardCanvas.SetActive(true);
-            }
-            else
-            {
-                //SetActiveChildren(clientPanelParent, clientState != _gameClientState.InGame);
-                menuCanvas.SetActive(_gameClientState != GameClientState.InGame);
+            //SetActiveChildren(clientPanelParent, clientState != _gameClientState.InGame);
 
-                queuedTime = _gameClientState == GameClientState.Queued ? Time.time : 0;
-                userWelcomeGrid.SetActive(_gameClientState == GameClientState.None);
-                userAccountGrid.SetActive(_gameClientState == GameClientState.Connected);
-                loginButton.interactable = _gameClientState == GameClientState.Connected;
-                userMenuGrid.SetActive(_gameClientState == GameClientState.Registred);
-                userQueueGrid.SetActive(_gameClientState == GameClientState.Queued);
-                userInviteGrid.SetActive(_gameClientState == GameClientState.Invited);
-                board.SetActive(_gameClientState == GameClientState.InGame);
-                boardCanvas.SetActive(_gameClientState == GameClientState.InGame);
-            }
+            menuCanvas.SetActive(_gameClientState != GameClientState.InGame);
+
+            queuedTime = _gameClientState == GameClientState.Queued ? Time.time : 0;
+            userWelcomeGrid.SetActive(_gameClientState == GameClientState.None);
+            userAccountGrid.SetActive(_gameClientState == GameClientState.Connected);
+            loginButton.interactable = _gameClientState == GameClientState.Connected;
+            userMenuGrid.SetActive(_gameClientState == GameClientState.Registred);
+            userQueueGrid.SetActive(_gameClientState == GameClientState.Queued);
+            userInviteGrid.SetActive(_gameClientState == GameClientState.Invited);
+            board.SetActive(_gameClientState == GameClientState.InGame);
+            boardCanvas.SetActive(_gameClientState == GameClientState.InGame);
+
 
             DoUpdatedGfx = false;
         }

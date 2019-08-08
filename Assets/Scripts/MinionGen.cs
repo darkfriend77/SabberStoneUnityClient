@@ -34,6 +34,38 @@ public class MinionGen : BasicGen
         health.GetComponent<TextMeshProUGUI>().text = entity.Health.ToString();
         health.GetComponent<TextMeshProUGUI>().color = entity.HealthColor;
 
+        var taunt = front.Find("Taunt");
+        taunt.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TAUNT) && entity.Tags[GameTag.TAUNT] == 1);
+
+        var legendary = front.Find("Legendary");
+        legendary.gameObject.SetActive((Rarity)entity.Tags[GameTag.RARITY] == Rarity.LEGENDARY);
+
+        var buffed = front.Find("Buffed");
+        buffed.gameObject.SetActive(false);
+
+        var divineShield = front.Find("DivineShield");
+        divineShield.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.DIVINE_SHIELD) && entity.Tags[GameTag.DIVINE_SHIELD] == 1);
+
+        var enraged = front.Find("Enraged");
+        enraged.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.ENRAGED) && entity.Tags[GameTag.ENRAGED] == 1);
+
+        var frozen = front.Find("Frozen");
+        frozen.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.FROZEN) && entity.Tags[GameTag.FROZEN] == 1);
+
+        var immune = front.Find("Immune");
+        immune.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.IMMUNE) && entity.Tags[GameTag.IMMUNE] == 1);
+
+        var silenced = front.Find("Silenced");
+        silenced.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.SILENCED) && entity.Tags[GameTag.SILENCED] == 1);
+
+        var stealth = front.Find("Stealth");
+        stealth.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.STEALTH) && entity.Tags[GameTag.STEALTH] == 1);
+
+        //var deathrattle = frame.Find("Untargetable");
+
+        var dead = front.Find("Dead");
+        dead.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TO_BE_DESTROYED) && entity.Tags[GameTag.TO_BE_DESTROYED] == 1);
+
         var deathrattle = frame.Find("Deathrattle");
         deathrattle.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.DEATHRATTLE) && entity.Tags[GameTag.DEATHRATTLE] == 1);
 
@@ -46,17 +78,6 @@ public class MinionGen : BasicGen
         var trigger = frame.Find("Trigger");
         trigger.gameObject.SetActive(false);
 
-        var legendary = front.Find("Legendary");
-        legendary.gameObject.SetActive((Rarity)entity.Tags[GameTag.RARITY] == Rarity.LEGENDARY);
-
-        var buffed = front.Find("Buffed");
-        buffed.gameObject.SetActive(false);
-
-        var divineShield = front.Find("DivineShield");
-        divineShield.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.DIVINE_SHIELD) && entity.Tags[GameTag.DIVINE_SHIELD] == 1);
-
-        var dead = front.Find("Dead");
-        dead.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TO_BE_DESTROYED) && entity.Tags[GameTag.TO_BE_DESTROYED] == 1);
     }
 
     internal void Generate(EntityExt entity)

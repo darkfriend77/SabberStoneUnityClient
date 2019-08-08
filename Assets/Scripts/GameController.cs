@@ -36,7 +36,7 @@ public class GameController : MonoBehaviour
 
     private EntityExt defendingEntity;
 
-    private Transform gridParent, _mainGame, _myChoicesPanel;
+    private Transform gridParent, _mainGame, _myChoices, _myChoicesPanel;
 
     //private ScrollRect consoleScrollRect;
 
@@ -54,7 +54,27 @@ public class GameController : MonoBehaviour
 
     private System.Random _random;
 
-    public Text PowerHistoryText, PowerOptionsText, PowerChoicesText;
+    public Text PowerHistoryText, PowerOptionsText, PowerChoicesText, PlayerStateText;
+
+    public enum PlayerClientState
+    {
+        None,
+        Choice,
+        Option,
+        Wait,
+        Finish
+    }
+
+    private PlayerClientState _playerState;
+
+    public PlayerClientState PlayerState { 
+        get => _playerState;
+        private set
+        {
+            _playerState = value;
+            PlayerStateText.text = _playerState.ToString();
+        }
+    }
 
     private void OnEnable()
     {
@@ -69,15 +89,16 @@ public class GameController : MonoBehaviour
     public void Start()
     {
         _random = new System.Random();
+        PlayerState = PlayerClientState.None;
 
         //consoleScrollRect = transform.parent.Find("Console").GetComponent<ScrollRect>();
         //gridParent = transform.parent.Find("Console").Find("Viewport").Find("Grid");
         var rootGameObjectList = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
         var boardCanvas = rootGameObjectList.Find(p => p.name == "BoardCanvas");
         _mainGame = boardCanvas.transform.Find("MainGame");
-        var myChoices = _mainGame.transform.Find("MyChoices");
-        _myChoicesPanel = myChoices.transform.Find("MyChoicesPanel");
-        _myChoicesPanel.gameObject.SetActive(false);
+        _myChoices = _mainGame.transform.Find("MyChoices");
+        _myChoicesPanel = _myChoices.transform.Find("MyChoicesPanel");
+        _myChoices.gameObject.SetActive(false);
         _endTurnButton = _mainGame.transform.Find("EndTurnButton").GetComponent<Button>();
         _endTurnButton.interactable = false;
 
@@ -90,7 +111,7 @@ public class GameController : MonoBehaviour
     public void Update()
     {
         _updatingIndex++;
-        if (_updatingIndex > 10)
+        if (_updatingIndex > 3)
         {
             ReadHistory();
             _updatingIndex = 0;
@@ -103,6 +124,8 @@ public class GameController : MonoBehaviour
         if (endTurnOption != null)
         {
             _endTurnButton.interactable = false;
+            PlayerState = PlayerClientState.Wait;
+
             _gameClient.SendPowerOptionChoice(
                 new PowerOptionChoice()
                 {
@@ -121,7 +144,6 @@ public class GameController : MonoBehaviour
     public void SetGameClient(GameClient gameClient)
     {
         _gameClient = gameClient;
-
     }
 
     //public void ReadHistory(List<IPowerHistoryEntry> powerHistoryEntries)
@@ -131,6 +153,12 @@ public class GameController : MonoBehaviour
         {
             return;
         }
+
+        var myStats = _mainGame.transform.Find(GetParentObject("Stats", _gameClient.MyUserInfo.PlayerId));
+        myStats.transform.Find("AccountName").GetComponent<Text>().text = $"{_gameClient.MyUserInfo.AccountName}[{_gameClient.MyUserInfo.PlayerId}]";
+
+        var opStats = _mainGame.transform.Find(GetParentObject("Stats", _gameClient.OpUserInfo.PlayerId));
+        opStats.transform.Find("AccountName").GetComponent<Text>().text = $"{_gameClient.OpUserInfo.AccountName}[{_gameClient.OpUserInfo.PlayerId}]";
 
         //    await Task.Run(() => {
 
@@ -156,17 +184,26 @@ public class GameController : MonoBehaviour
         {
             if (_gameClient.HistoryEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
             {
+                PlayerState = PlayerClientState.Wait;
                 ReadHistoryEntry(historyEntry);
             }
 
-            if (_gameClient.HistoryEntries.Count() == 0)
+            if (_gameClient.HistoryEntries.Count() == 0 && PlayerState == PlayerClientState.Wait)
             {
                 if (ReadPowerChoices())
                 {
-                    return;
+                    PlayerState = PlayerClientState.Choice;
                 }
-
-                ReadPowerOptions();
+                else if (ReadPowerOptions())
+                {
+                    PlayerState = PlayerClientState.Option;
+                }
+                else
+                {
+                    PlayerState = PlayerClientState.Wait;
+                    PowerChoicesText.text = "0";
+                    PowerOptionsText.text = "0";
+                }
             }
         }
     }
@@ -175,15 +212,15 @@ public class GameController : MonoBehaviour
     {
         if (_gameClient.PowerChoices == null)
         {
-            _myChoicesPanel.gameObject.SetActive(false);
+            _myChoices.gameObject.SetActive(false);
             return false;
         }
 
-        //Debug.Log($"Current PowerChoices: {_gameClient.PowerChoices.ChoiceType} with {_gameClient.PowerChoices.Entities.Count} entities");
+        Debug.Log($"Current PowerChoices: {_gameClient.PowerChoices.ChoiceType} with {_gameClient.PowerChoices.Entities.Count} entities");
 
-        PowerChoicesText.text = $"{_gameClient.PowerChoices.ChoiceType}[{_gameClient.PowerChoices.Entities.Count}]";
+        PowerChoicesText.text = $"{_gameClient.PowerChoices.Entities.Count}{_gameClient.PowerChoices.ChoiceType.ToString().Substring(0, 1)}";
 
-        _myChoicesPanel.gameObject.SetActive(true);
+        _myChoices.gameObject.SetActive(true);
 
         _gameClient.PowerChoices.Entities.ForEach(p => {
 
@@ -199,12 +236,12 @@ public class GameController : MonoBehaviour
     }
 
     //public void ReadPowerOptions(List<PowerOption> powerOptions)
-    public void ReadPowerOptions()
+    public bool ReadPowerOptions()
     {
         if (_gameClient.PowerOptionList.Count() == 0)
         {
             _endTurnButton.interactable = false;
-            return;
+            return false;
         }
 
         //Debug.Log($"Current PowerOptions: {_gameClient.PowerOptionList.Count()}");
@@ -219,6 +256,8 @@ public class GameController : MonoBehaviour
         {
 
         }
+
+        return true;
     }
 
     public void OnClickRandomMove()
@@ -232,6 +271,7 @@ public class GameController : MonoBehaviour
             _myChoicesPanel.gameObject.SetActive(false);
 
             Debug.Log($"powerChoicesChoice => choices:{powerChoicesId}");
+            PlayerState = PlayerClientState.Wait;
             _gameClient.SendPowerChoicesChoice(new PowerChoices() { ChoiceType = powerChoicesChoice.ChoiceType, Entities = new List<int>() { powerChoicesChoice.Entities[powerChoicesId] } });
             return;
         }
@@ -257,6 +297,7 @@ public class GameController : MonoBehaviour
                   $"{powerOptionChoice.PowerOption.Print()}");
 
         _endTurnButton.interactable = powerOptionChoice.PowerOption.OptionType != OptionType.END_TURN;
+        PlayerState = PlayerClientState.Wait;
         _gameClient.SendPowerOptionChoice(powerOptionChoice);
     }
 
@@ -365,7 +406,7 @@ public class GameController : MonoBehaviour
 
     private void UpdateMetaData(PowerHistoryMetaData metaData)
     {
-        //Debug.Log($"{metaData.Print()}");
+        Debug.Log($"{metaData.Print()}");
     }
 
     private void UpdateBlockEnd(PowerHistoryBlockEnd blockEnd)
@@ -391,13 +432,13 @@ public class GameController : MonoBehaviour
         {
             if (oldValue != tagChange.Value)
             {
-                // Debug.Log($"[CHANGE_TAG] {tagChange.Tag}: {oldValue} => {tagChange.Value}");
+                 //Debug.Log($"[CHANGE_TAG] {tagChange.Tag}: {oldValue} => {tagChange.Value}");
                 entityExt.Tags[tagChange.Tag] = tagChange.Value;
             }
         }
         else
         {
-            // Debug.Log($"[ADD_TAG] {tagChange.Tag}: {tagChange.Value}");
+            //Debug.Log($"[ADD_TAG] {tagChange.Tag}: {tagChange.Value}");
             entityExt.Tags[tagChange.Tag] = tagChange.Value;
         }
 
@@ -458,9 +499,15 @@ public class GameController : MonoBehaviour
                 break;
 
             // updateing entities ... with those tags, visible stats
+            case GameTag.ATK:
+            case GameTag.HEALTH:
+            case GameTag.ENRAGED:
+            case GameTag.FROZEN:
+            case GameTag.IMMUNE:
+            case GameTag.SILENCED:
+            case GameTag.STEALTH:
             case GameTag.ARMOR:
             case GameTag.DURABILITY:
-            case GameTag.HEALTH:
             case GameTag.DIVINE_SHIELD:
             case GameTag.DEATHRATTLE:
             case GameTag.POISONOUS:
@@ -479,7 +526,7 @@ public class GameController : MonoBehaviour
                 break;
 
             default:
-                //Debug.Log(tagChange.Print());
+                Debug.Log(tagChange.Print());
                 break;
         }
 
@@ -678,15 +725,24 @@ public class GameController : MonoBehaviour
 
     private string GetParentObject(string parentObjectName, int PlayerId)
     {
-        switch (PlayerId)
+        if (_gameClient.PlayerId == PlayerId)
         {
-            case 1:
-                return $"My{parentObjectName}";
-            case 2:
-                return $"Op{parentObjectName}";
-            default:
-                return null;
+            return $"My{parentObjectName}";
         }
+        else
+        {
+            return $"Op{parentObjectName}";
+        }
+
+        //switch (PlayerId)
+        //{
+        //    case 1:
+        //        return $"My{parentObjectName}";
+        //    case 2:
+        //        return $"Op{parentObjectName}";
+        //    default:
+        //        return null;
+        //}
     }
 
     private void UpdateHideEntity(PowerHistoryHideEntity entity)
