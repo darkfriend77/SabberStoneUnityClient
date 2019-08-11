@@ -64,6 +64,8 @@ public class CardGen : BasicGen
 
     public override void UpdateEntity(EntityExt entity)
     {
+        base.UpdateEntity(entity);
+
         CardType cardType = (CardType)entity.Tags[GameTag.CARDTYPE];
 
         var front = transform.Find("Front");

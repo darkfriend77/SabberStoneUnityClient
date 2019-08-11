@@ -8,12 +8,12 @@ using UnityEngine;
 
 public class CardContainer : MonoBehaviour
 {
-    public List<GameObject> Cards;
+    public List<GameObject> Entities;
 
     // Start is called before the first frame update
     void Start()
     {
-        Cards = new List<GameObject>();
+        Entities = new List<GameObject>();
     }
 
     // Update is called once per frame
@@ -22,15 +22,35 @@ public class CardContainer : MonoBehaviour
         
     }
     
-    internal void Add(GameObject card)
+    internal void Add(GameObject entity)
     {
-        card.transform.SetParent(transform, false);
-        card.transform.SetAsFirstSibling();
-        Cards.Add(card);
+        entity.transform.SetParent(transform, false);
+        entity.transform.SetAsFirstSibling();
+        Entities.Add(entity);
     }
 
-    internal void Remove(GameObject card)
+    internal void Remove(GameObject entity)
     {
-        Cards.Remove(card);
+        Entities.Remove(entity);
+    }
+
+    internal void Order()
+    {
+        if (Entities.Count < 2)
+        {
+            return;
+        }
+
+        var basicGen = Entities[0].GetComponent<BasicGen>();
+        if (basicGen != null)
+        {
+            Entities.Sort((a, b) => 
+            a.GetComponent<BasicGen>().Tag(SabberStoneCore.Enums.GameTag.ZONE_POSITION)
+            .CompareTo(b.GetComponent<BasicGen>().Tag(SabberStoneCore.Enums.GameTag.ZONE_POSITION)));
+            foreach(var card in Entities)
+            {
+                card.transform.SetAsLastSibling();
+            }
+        }
     }
 }

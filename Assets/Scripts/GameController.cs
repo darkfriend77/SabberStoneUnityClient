@@ -138,6 +138,7 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Frostbolt"),
                 Cards.FromName("Kobold Geomancer"),
                 Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Fireball"),
                 Cards.FromName("Arcane Missiles"),
                 Cards.FromName("Frostbolt"),
@@ -148,7 +149,6 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Water Elemental"),
                 Cards.FromName("Flamestrike"),
                 Cards.FromName("Flamestrike"),
-                Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Arcane Intellect"),
                 Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Frostwolf Grunt"),
@@ -168,9 +168,13 @@ public class GameController : MonoBehaviour
             Player2Deck = new List<Card>() {
                 Cards.FromName("Arcane Missiles"),
                 Cards.FromName("Frostwolf Grunt"),
+                Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Frostbolt"),
-                Cards.FromName("Kobold Geomancer"),
                 Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Dalaran Mage"),
+                Cards.FromName("Darkscale Healer"),
+                Cards.FromName("Kobold Geomancer"),
+                Cards.FromName("Kobold Geomancer"),
                 Cards.FromName("Fireball"),
                 Cards.FromName("Arcane Missiles"),
                 Cards.FromName("Frostbolt"),
@@ -181,16 +185,13 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Water Elemental"),
                 Cards.FromName("Flamestrike"),
                 Cards.FromName("Flamestrike"),
-                Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Arcane Intellect"),
                 Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Frostwolf Grunt"),
-                Cards.FromName("Kobold Geomancer"),
-                Cards.FromName("Dalaran Mage"),
                 Cards.FromName("Dalaran Mage"),
                 Cards.FromName("Sen'jin Shieldmasta"),
                 Cards.FromName("Sen'jin Shieldmasta"),
-                Cards.FromName("Darkscale Healer"),
+
                 Cards.FromName("Darkscale Healer"),
                 Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Gurubashi Berserker"),
@@ -238,7 +239,18 @@ public class GameController : MonoBehaviour
             case 5: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
             // ROUND 2 
+            // turn player 1
             case 6: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.BoardZone[0])); break;
+            case 7: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 8: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman")); break;
+            case 9: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+
+            // ROUND 3 
+            // turn player 1
+            case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
+            case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition:1)); break;
+            case 12: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
@@ -497,11 +509,12 @@ public class GameController : MonoBehaviour
             //    break;
 
             case GameTag.ZONE:
+                //Debug.Log($"UPDATE_ENTITY_ZONE {(Zone)tagChange.Value}");
                 DoZoneChange(entityExt, preValue != null ? (Zone)preValue : Zone.INVALID, (Zone)tagChange.Value);
                 break;
 
             case GameTag.ZONE_POSITION:
-                //Debug.Log("UPDATE_ENTITY_POSITION");
+                DoZonePositionChange(entityExt);
                 break;
 
             case GameTag.RESOURCES:
@@ -576,7 +589,7 @@ public class GameController : MonoBehaviour
                 break;
 
             default:
-                Debug.Log(tagChange.Print());
+                //Debug.Log(tagChange.Print());
                 break;
         }
 
@@ -737,6 +750,10 @@ public class GameController : MonoBehaviour
                                 Destroy(entityExt.GameObjectScript.gameObject);
                                 break;
 
+                            case CardType.SPELL:
+                                // spells move to graveyard ...
+                                break;
+
                             default:
                                 Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                                 break;
@@ -757,6 +774,19 @@ public class GameController : MonoBehaviour
                 break;
         }
 
+    }
+
+    private void DoZonePositionChange(EntityExt entityExt)
+    {
+        switch ((Zone) entityExt.Tags[GameTag.ZONE])
+        {
+            case Zone.PLAY:
+            case Zone.HAND:
+                _mainGame.transform.Find(GetParentObject("Board", entityExt)).GetComponent<CardContainer>().Order();
+                break;
+            default:
+                break;
+        }
     }
 
     private BasicGen createCardIn(Transform location, GameObject cardPrefab, EntityExt entityExt)

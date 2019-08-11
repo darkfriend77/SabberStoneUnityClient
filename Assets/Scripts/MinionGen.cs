@@ -59,6 +59,8 @@ public class MinionGen : CharacterGen
 
     public override void UpdateEntity(EntityExt entity)
     {
+        base.UpdateEntity(entity);
+
         var front = transform.Find("Front");
         var frame = front.Find("Frame");
 

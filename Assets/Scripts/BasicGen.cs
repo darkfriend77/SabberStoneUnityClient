@@ -22,9 +22,13 @@ public abstract class BasicGen : MonoBehaviour
 {
     public AnimationState AnimState { get; set; }
 
+    internal EntityExt _entityExt;
+
     public virtual void UpdateEntity(EntityExt entityExt)
     {
-        Debug.Log($"UpdateEntity not implemented! {gameObject.GetType()}");
+        _entityExt = entityExt;
     }
+
+    public int Tag(GameTag gameTag) => _entityExt.Tags[gameTag];
 
 }
