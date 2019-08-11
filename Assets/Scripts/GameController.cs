@@ -139,6 +139,8 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Kobold Geomancer"),
                 Cards.FromName("Arcane Intellect"),
                 Cards.FromName("Goldshire Footman"),
+                Cards.FromName("Sen'jin Shieldmasta"),
+                Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Fireball"),
                 Cards.FromName("Arcane Missiles"),
                 Cards.FromName("Frostbolt"),
@@ -156,10 +158,8 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Dalaran Mage"),
                 Cards.FromName("Dalaran Mage"),
                 Cards.FromName("Sen'jin Shieldmasta"),
-                Cards.FromName("Sen'jin Shieldmasta"),
                 Cards.FromName("Darkscale Healer"),
                 Cards.FromName("Darkscale Healer"),
-                Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Boulderfist Ogre"),
                 Cards.FromName("Boulderfist Ogre")
@@ -191,7 +191,6 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Dalaran Mage"),
                 Cards.FromName("Sen'jin Shieldmasta"),
                 Cards.FromName("Sen'jin Shieldmasta"),
-
                 Cards.FromName("Darkscale Healer"),
                 Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Gurubashi Berserker"),
@@ -251,6 +250,18 @@ public class GameController : MonoBehaviour
             case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
             case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition:1)); break;
             case 12: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 13: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Intellect")); break;
+            case 14: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+
+            // ROUND 4 
+            // turn player 1
+            case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.BoardZone[0])); break;
+            case 16: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
+            case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
+            case 18: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
