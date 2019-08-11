@@ -2,6 +2,7 @@
 using SabberStoneCore.Enums;
 using SabberStoneCore.Kettle;
 using SabberStoneCore.Model;
+using SabberStoneCore.Tasks.PlayerTasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,8 +14,6 @@ using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
-    private Game game;
-
     private Dictionary<int, EntityExt> EntitiesExt = new Dictionary<int, EntityExt>();
 
     public GameObject HeroPrefab;
@@ -130,7 +129,7 @@ public class GameController : MonoBehaviour
 
         var gameConfig = new GameConfig
         {
-            //StartPlayer = 1,
+            StartPlayer = 1,
             FormatType = FormatType.FT_STANDARD,
             Player1HeroClass = CardClass.MAGE,
             Player1Deck = new List<Card>() {
@@ -224,20 +223,31 @@ public class GameController : MonoBehaviour
 
     public void OnClickStepByStep()
     {
+
         switch (_stepper)
         {
             case 0:
                 _game.StartGame();
                 break;
+
+            case 1:
+                _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles"));
+                break;
+
+            default:
+                Debug.Log("Next step is not implemented, please add it!");
+                break;
         }
 
         _game.PowerHistory.Last.ForEach(p => HistoryEntries.Enqueue(p));
+
+        _stepper++;
     }
 
     public void Update()
     {
         _updatingIndex++;
-        if (_updatingIndex > 1)
+        if (_updatingIndex > 0)
         {
             ReadHistory();
             _updatingIndex = 0;
