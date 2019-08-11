@@ -9,7 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HeroGen : BasicGen
+public class HeroGen : CharacterGen
 {
     private Hero hero;
 
@@ -32,18 +32,6 @@ public class HeroGen : BasicGen
     private GameObject dead;
 
     private PowerHistoryEntity heroEntity;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 
     public override void UpdateEntity(EntityExt entity)
     {
@@ -106,4 +94,5 @@ public class HeroGen : BasicGen
         UpdateEntity(entity);
 
     }
+
 }

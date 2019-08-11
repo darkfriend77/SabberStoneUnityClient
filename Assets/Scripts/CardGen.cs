@@ -57,7 +57,7 @@ public class CardGen : BasicGen
                 if (_colorFade <= 0)
                 {
                     Destroy(gameObject);
-                    AnimState = AnimationState.DONE;
+                    AnimState = AnimationState.NONE;
                 }
 
             }

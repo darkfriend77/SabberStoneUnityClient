@@ -8,20 +8,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MinionGen : BasicGen
+public class MinionGen : CharacterGen
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public override void UpdateEntity(EntityExt entity)
     {
         var front = transform.Find("Front");

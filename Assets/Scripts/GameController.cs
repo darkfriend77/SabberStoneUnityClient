@@ -528,9 +528,20 @@ public class GameController : MonoBehaviour
                 Debug.Log($"Doing damage ... to {entityExt.Name}");
                 if (entityExt == defendingEntity && attackingEntity.Zone == Zone.PLAY && attackingEntity.CardType == CardType.MINION)
                 {
-                    Debug.Log("with animation now !!!");
+                    Debug.Log(".. attack animation now !!!");
                     attackingEntity.GameObjectScript.transform.GetComponent<MinionAnimation>().AnimAttack(defendingEntity.GameObjectScript.gameObject);
                 }
+
+                var characterGen = entityExt.GameObjectScript.gameObject.GetComponent<CharacterGen>();
+                if (characterGen != null)
+                {
+                    characterGen.DamageAnim(oldValue - tagChange.Value);
+                }
+                else
+                {
+                    Debug.LogError("Something bad happened, damage to a non-character?!");
+                }
+
                 entityExt.GameObjectScript.UpdateEntity(entityExt);
                 break;
 
@@ -563,7 +574,7 @@ public class GameController : MonoBehaviour
                 break;
 
             default:
-                //Debug.Log(tagChange.Print());
+                Debug.Log(tagChange.Print());
                 break;
         }
 
