@@ -41,7 +41,56 @@ public class CardGen : BasicGen
 
     }
 
-    private Sprite GetLegendarySprite(CardType cardType)
+    public override void UpdateEntity(EntityExt entity)
+    {
+        CardType cardType = (CardType)entity.Tags[GameTag.CARDTYPE];
+
+        var front = transform.Find("Front");
+        var frame = front.Find("Frame");
+
+        var mana = frame.Find("Mana");
+        var attack = frame.Find("Attack");
+        var health = frame.Find("Health");
+
+        switch (cardType)
+        {
+            case CardType.INVALID:
+                break;
+            case CardType.GAME:
+                break;
+            case CardType.PLAYER:
+                break;
+            case CardType.HERO:
+                health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.HEALTH].ToString();
+                attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
+                break;
+            case CardType.MINION:
+                mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.HEALTH].ToString();
+                attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
+                break;
+            case CardType.SPELL:
+                mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                health.gameObject.SetActive(false);
+                attack.gameObject.SetActive(false);
+                break;
+            case CardType.ENCHANTMENT:
+                break;
+            case CardType.WEAPON:
+                mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.DURABILITY].ToString();
+                attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
+                break;
+            case CardType.ITEM:
+                break;
+            case CardType.TOKEN:
+                break;
+            case CardType.HERO_POWER:
+                break;
+        }
+    }
+
+        private Sprite GetLegendarySprite(CardType cardType)
     {
         switch (cardType)
         {

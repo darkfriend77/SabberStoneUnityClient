@@ -444,7 +444,12 @@ public class GameController : MonoBehaviour
 
         switch (tagChange.Tag)
         {
+            case GameTag.MULLIGAN_STATE:
+                Debug.Log($"MULLIGAN_STATE = {(Mulligan) tagChange.Value}");
+                break;
+
             case GameTag.PLAYSTATE:
+                Debug.Log($"PLAYSTATE = {(PlayState) tagChange.Value}");
                 break;
 
             //case GameTag.HERO_ENTITY:
@@ -513,6 +518,7 @@ public class GameController : MonoBehaviour
             case GameTag.POISONOUS:
             case GameTag.INSPIRE:
             case GameTag.AURA:
+            case GameTag.COST:
                 entityExt.GameObjectScript.UpdateEntity(entityExt);
                 break;
 
@@ -557,7 +563,7 @@ public class GameController : MonoBehaviour
             case Zone.INVALID:
 
                 GameObject gameObject;
-                CardGen cardGen;
+                //CardGen cardGen;
                 MinionGen minionGen;
                 HeroWeaponGen heroWeaponGen;
 
@@ -614,6 +620,7 @@ public class GameController : MonoBehaviour
                     case Zone.HAND:
                         _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
                         break;
+
                     default:
                         Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                         break;
@@ -624,7 +631,14 @@ public class GameController : MonoBehaviour
                 _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
                 switch (nextZone)
                 {
+                    case Zone.DECK:
+                        // mostly from mulligan back to deck
+                        _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
+                        _mainGame.transform.Find(GetParentObject("Deck", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
+                        break;
+
                     case Zone.PLAY:
+
                         switch (entityExt.CardType)
                         {
                             case CardType.MINION:
@@ -653,11 +667,13 @@ public class GameController : MonoBehaviour
                                 heroWeaponGen.Generate(entityExt);
                                 entityExt.GameObjectScript = heroWeaponGen;
                                 break;
+
                             default:
                                 Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                                 break;
                         }
                         break;
+
                     default:
                         Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                         break;
@@ -678,6 +694,10 @@ public class GameController : MonoBehaviour
 
                             case CardType.WEAPON:
                                 Destroy(entityExt.GameObjectScript.gameObject);
+                                break;
+
+                            default:
+                                Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                                 break;
                         }
                         break;

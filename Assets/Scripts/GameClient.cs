@@ -161,9 +161,9 @@ public class GameClient : MonoBehaviour
 
         if (DoUpdatedGfx)
         {
-            clientStateText.text = _gameClientState.ToString();
-            connectButtonText.text = _gameClientState == GameClientState.None ? "CONNECT" : "DISCONNECT";
-            connectButtonImage.color = _gameClientState == GameClientState.None ? Color.green : Color.red;
+            clientStateText.text = GameClientState.ToString();
+            connectButtonText.text = GameClientState == GameClientState.None ? "CONNECT" : "DISCONNECT";
+            connectButtonImage.color = GameClientState == GameClientState.None ? Color.green : Color.red;
 
             //ClearChildren(userDataContentParent);
 
@@ -174,19 +174,19 @@ public class GameClient : MonoBehaviour
             //    userEntryGameObject.transform.Find("Text").GetComponent<Text>().text = $"{user.PlayerId},{user.AccountName},{user.UserState},{user.GameId}";
             //});
 
-            //SetActiveChildren(clientPanelParent, clientState != _gameClientState.InGame);
+            //SetActiveChildren(clientPanelParent, clientState != GameClientState.InGame);
 
-            menuCanvas.SetActive(_gameClientState != GameClientState.InGame);
+            menuCanvas.SetActive(GameClientState != GameClientState.InGame);
 
-            queuedTime = _gameClientState == GameClientState.Queued ? Time.time : 0;
-            userWelcomeGrid.SetActive(_gameClientState == GameClientState.None);
-            userAccountGrid.SetActive(_gameClientState == GameClientState.Connected);
-            loginButton.interactable = _gameClientState == GameClientState.Connected;
-            userMenuGrid.SetActive(_gameClientState == GameClientState.Registred);
-            userQueueGrid.SetActive(_gameClientState == GameClientState.Queued);
-            userInviteGrid.SetActive(_gameClientState == GameClientState.Invited);
-            board.SetActive(_gameClientState == GameClientState.InGame);
-            boardCanvas.SetActive(_gameClientState == GameClientState.InGame);
+            queuedTime = GameClientState == GameClientState.Queued ? Time.time : 0;
+            userWelcomeGrid.SetActive(GameClientState == GameClientState.None);
+            userAccountGrid.SetActive(GameClientState == GameClientState.Connected);
+            loginButton.interactable = GameClientState == GameClientState.Connected;
+            userMenuGrid.SetActive(GameClientState == GameClientState.Registred);
+            userQueueGrid.SetActive(GameClientState == GameClientState.Queued);
+            userInviteGrid.SetActive(GameClientState == GameClientState.Invited);
+            board.SetActive(GameClientState == GameClientState.InGame);
+            boardCanvas.SetActive(GameClientState == GameClientState.InGame);
 
 
             DoUpdatedGfx = false;
@@ -235,7 +235,7 @@ public class GameClient : MonoBehaviour
 
     public void OnClickConnect()
     {
-        if (_gameClientState == GameClientState.None)
+        if (GameClientState == GameClientState.None)
         {
             Connect();
         }
@@ -275,6 +275,8 @@ public class GameClient : MonoBehaviour
     }
 
     #region GAMECLIENT PART
+
+    // TODO this part should be moved out in to the SabberStoneClient.DLL to avoid redundant code.
 
     public void Connect()
     {
@@ -440,6 +442,7 @@ public class GameClient : MonoBehaviour
         {
             case MsgType.Initialisation:
                 GameClientState = GameClientState.Registred;
+                registerWaiter.SetResult(new object());
                 break;
 
             case MsgType.Invitation:
@@ -483,7 +486,7 @@ public class GameClient : MonoBehaviour
 
     private void Queue(GameType gameType = GameType.Normal, DeckType deckType = DeckType.Random, string deckData = null)
     {
-        if (_gameClientState != GameClientState.Registred)
+        if (GameClientState != GameClientState.Registred)
         {
             Debug.Log("GameClient isn't registred.");
             return;
