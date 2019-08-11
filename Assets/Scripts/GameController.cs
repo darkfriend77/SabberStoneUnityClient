@@ -580,7 +580,7 @@ public class GameController : MonoBehaviour
                 break;
 
             default:
-                //Debug.Log(tagChange.Print());
+                Debug.Log(tagChange.Print());
                 break;
         }
 
