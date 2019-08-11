@@ -242,7 +242,7 @@ public class GameController : MonoBehaviour
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
-                break;
+                return;
         }
 
         _game.PowerHistory.Last.ForEach(p => HistoryEntries.Enqueue(p));
