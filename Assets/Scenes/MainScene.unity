@@ -491,7 +491,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!1 &57382888
 GameObject:
   m_ObjectHideFlags: 0
@@ -3825,7 +3825,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!1 &655554852
 GameObject:
   m_ObjectHideFlags: 0
@@ -4599,7 +4599,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!114 &829940366
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4700,7 +4700,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!114 &838285351
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6578,7 +6578,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!1 &1409042976
 GameObject:
   m_ObjectHideFlags: 0
@@ -6652,7 +6652,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!1 &1432346008
 GameObject:
   m_ObjectHideFlags: 0
@@ -6810,7 +6810,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!114 &1490461708
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7620,7 +7620,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!114 &1620859152
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10333,7 +10333,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3ce256ed6f41f43a35674134b690cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Cards: []
+  Entities: []
 --- !u!1 &2145771163
 GameObject:
   m_ObjectHideFlags: 0
