@@ -263,6 +263,7 @@ public class GameController : MonoBehaviour
     public void ReadHistory()
     {
         IPowerHistoryEntry historyEntry;
+
         if (AllAnimStatesAreNone)
         {
             if (HistoryEntries.Count > 0)
@@ -562,7 +563,7 @@ public class GameController : MonoBehaviour
                 break;
 
             default:
-                Debug.Log(tagChange.Print());
+                //Debug.Log(tagChange.Print());
                 break;
         }
 
@@ -661,19 +662,20 @@ public class GameController : MonoBehaviour
                 _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
                 switch (nextZone)
                 {
-                    case Zone.DECK:
-                        // mostly from mulligan back to deck
-                        _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
-                        _mainGame.transform.Find(GetParentObject("Deck", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
-                        break;
 
                     case Zone.PLAY:
+
+                        Debug.Log(GetParentObject("Play", entityExt));
+
+                        _mainGame.transform.Find(GetParentObject("Play", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
+
+                        // destroying old object, as we are building a new one.
+                        entityExt.GameObjectScript.gameObject.GetComponent<CardGen>().DestroyAnim();
+                        //Destroy(entityExt.GameObjectScript.gameObject);
 
                         switch (entityExt.CardType)
                         {
                             case CardType.MINION:
-                                // destroying old object, as we are building a new one.
-                                Destroy(entityExt.GameObjectScript.gameObject);
 
                                 gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
                                 minionGen = gameObject.GetComponent<MinionGen>();
@@ -684,12 +686,10 @@ public class GameController : MonoBehaviour
                                 break;
 
                             case CardType.SPELL:
-                                // destroying old object, as we are building a new one.
-                                Destroy(entityExt.GameObjectScript.gameObject);
+
                                 break;
 
                             case CardType.WEAPON:
-                                Destroy(entityExt.GameObjectScript.gameObject);
 
                                 var heroWeaponParent = _mainGame.transform.Find(GetParentObject("HeroWeapon", entityExt));
                                 gameObject = Instantiate(HeroWeaponPrefab, heroWeaponParent.transform).gameObject;

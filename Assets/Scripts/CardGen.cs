@@ -13,20 +13,18 @@ using SabberStoneCore.Kettle;
 
 public class CardGen : BasicGen
 {
+    private float _destroyTimer;
+    private Color _color;
+    private float _colorFade;
 
     // Start is called before the first frame update
     void Start()
     {
+        _destroyTimer = 0.5f;
+        _color.a = 1f;
+        _colorFade = 1;
 
-        //CurrentCard = RandomNewCard();
-
-        //if (CurrentCard != null)
-        //{
-        //    //var card = Cards.FromName("Knife Juggler");
-        //    //CurrentCard = Cards.FromName("Fiery War Axe");
-        //    Debug.Log($"Current card: {CurrentCard.Name} [{CurrentCard.Id}]!");
-        //    CreateCard(CurrentCard);
-        //}
+        AnimState = AnimationState.NONE;
     }
 
     internal void Show(bool showFlag)
@@ -38,7 +36,32 @@ public class CardGen : BasicGen
     // Update is called once per frame
     void Update()
     {
+        if (AnimState == AnimationState.DESTROY)
+        {
+            _destroyTimer -= Time.deltaTime;
 
+            if (_destroyTimer <= 0)
+            {
+                _colorFade -= 0.01f;
+
+                foreach (var image in GetComponentsInChildren<Image>())
+                {
+                    image.color = new Color(image.color.r, image.color.g, image.color.b, _colorFade);
+                }
+
+                foreach (var textMesh in GetComponentsInChildren<TextMeshProUGUI>())
+                {
+                    textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, _colorFade);
+                }
+
+                if (_colorFade <= 0)
+                {
+                    Destroy(gameObject);
+                    AnimState = AnimationState.DONE;
+                }
+
+            }
+        }
     }
 
     public override void UpdateEntity(EntityExt entity)
@@ -90,7 +113,7 @@ public class CardGen : BasicGen
         }
     }
 
-        private Sprite GetLegendarySprite(CardType cardType)
+    private Sprite GetLegendarySprite(CardType cardType)
     {
         switch (cardType)
         {
@@ -274,5 +297,11 @@ public class CardGen : BasicGen
 
         // set to visible
         Show(true);
+    }
+
+    internal void DestroyAnim()
+    {
+        Debug.Log("DestroyAnim called ...");
+        AnimState = AnimationState.DESTROY;
     }
 }

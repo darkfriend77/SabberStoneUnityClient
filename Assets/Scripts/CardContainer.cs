@@ -8,12 +8,12 @@ using UnityEngine;
 
 public class CardContainer : MonoBehaviour
 {
-    public List<GameObject> Cards = new List<GameObject>();
+    public List<GameObject> Cards;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        Cards = new List<GameObject>();
     }
 
     // Update is called once per frame

@@ -12,6 +12,7 @@ public enum AnimationState
 {
     NONE,
     ATTACK,
+    DESTROY,
     DEAD,
     DONE
 }
@@ -19,16 +20,6 @@ public enum AnimationState
 public abstract class BasicGen : MonoBehaviour
 {
     public AnimationState AnimState { get; set; }
-
-    public void Start()
-    {
-    }
-
-    void Update()
-    {
-
-    }
-
 
     public virtual void UpdateEntity(EntityExt entityExt)
     {
