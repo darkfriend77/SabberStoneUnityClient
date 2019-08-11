@@ -14,14 +14,12 @@ using SabberStoneCore.Kettle;
 public class CardGen : BasicGen
 {
     private float _destroyTimer;
-    private Color _color;
     private float _colorFade;
 
     // Start is called before the first frame update
     void Start()
     {
         _destroyTimer = 0.5f;
-        _color.a = 1f;
         _colorFade = 1;
 
         AnimState = AnimationState.NONE;

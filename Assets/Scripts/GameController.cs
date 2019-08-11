@@ -226,13 +226,19 @@ public class GameController : MonoBehaviour
 
         switch (_stepper)
         {
-            case 0:
-                _game.StartGame();
-                break;
+            case 0: _game.StartGame(); break;
+            
+            // ROUND 1 
+            // turn player 1
+            case 1: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles")); break;
+            case 2: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 3: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "The Coin")); break;
+            case 4: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
+            case 5: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            case 1:
-                _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles"));
-                break;
+            // ROUND 2 
+            case 6: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.BoardZone[0])); break;
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
