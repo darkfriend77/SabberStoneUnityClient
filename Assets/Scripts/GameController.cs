@@ -227,7 +227,7 @@ public class GameController : MonoBehaviour
         switch (_stepper)
         {
             case 0: _game.StartGame(); break;
-            
+
             // ROUND 1 
             // turn player 1
             case 1: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles")); break;
@@ -517,10 +517,6 @@ public class GameController : MonoBehaviour
 
             case GameTag.TO_BE_DESTROYED:
                 entityExt.GameObjectScript.UpdateEntity(entityExt);
-                if (entityExt.Zone == Zone.PLAY && entityExt.CardType == CardType.MINION)
-                {
-                    entityExt.GameObjectScript.transform.GetComponent<MinionAnimation>().AnimDead();
-                }
                 break;
 
             case GameTag.ATTACKING:
@@ -681,9 +677,6 @@ public class GameController : MonoBehaviour
                 {
 
                     case Zone.PLAY:
-
-                        Debug.Log(GetParentObject("Play", entityExt));
-
                         _mainGame.transform.Find(GetParentObject("Play", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
 
                         // destroying old object, as we are building a new one.
@@ -736,7 +729,8 @@ public class GameController : MonoBehaviour
                         {
                             case CardType.MINION:
                                 _mainGame.transform.Find(GetParentObject("Board", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
-                                Destroy(entityExt.GameObjectScript.gameObject);
+                                entityExt.GameObjectScript.gameObject.GetComponent<MinionGen>().DestroyAnim();
+                                //Destroy(entityExt.GameObjectScript.gameObject);
                                 break;
 
                             case CardType.WEAPON:

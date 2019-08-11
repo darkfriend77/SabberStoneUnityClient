@@ -16,9 +16,9 @@ public class CardGen : BasicGen
     private float _destroyTimer;
     private float _colorFade;
 
-    // Start is called before the first frame update
     void Start()
     {
+
         _destroyTimer = 0.5f;
         _colorFade = 1;
 
@@ -299,7 +299,6 @@ public class CardGen : BasicGen
 
     internal void DestroyAnim()
     {
-        Debug.Log("DestroyAnim called ...");
         AnimState = AnimationState.DESTROY;
     }
 }

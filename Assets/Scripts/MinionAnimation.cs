@@ -39,13 +39,6 @@ public class MinionAnimation : MonoBehaviour
                 }
                 break;
             case AnimationState.DEAD:
-                counter++;
-
-                if (counter > 20)
-                {
-                    minionGen.AnimState = AnimationState.DONE;
-                }
-                break;
             case AnimationState.NONE:
             case AnimationState.DONE:
                 break;
@@ -77,20 +70,6 @@ public class MinionAnimation : MonoBehaviour
         transform.SetPositionAndRotation(cachedPosition, Quaternion.identity);
         transform.SetParent(cachedParent, false);
         transform.SetSiblingIndex(cachedSiblingIndex);
-
-        minionGen.AnimState = AnimationState.NONE;
-    }
-
-    public void AnimDead()
-    {
-        StartCoroutine(StartAnimDead());
-    }
-
-    IEnumerator StartAnimDead()
-    {
-        minionGen.AnimState = AnimationState.DEAD;
-        counter = 0;
-        yield return new WaitUntil(() => minionGen.AnimState == AnimationState.DONE);
 
         minionGen.AnimState = AnimationState.NONE;
     }

@@ -33,6 +33,16 @@ public class HeroGen : CharacterGen
 
     private PowerHistoryEntity heroEntity;
 
+    new void Start()
+    {
+        base.Start();
+    }
+
+    new void Update()
+    {
+        base.Update();
+    }
+
     public override void UpdateEntity(EntityExt entity)
     {
         var front = transform.Find("Front");

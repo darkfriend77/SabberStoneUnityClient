@@ -45,8 +45,6 @@ public class ManaGen : MonoBehaviour
         manaCurrent.text = (res + tmp - use).ToString();
         manaMax.text = (res + tmp).ToString();
 
-        Debug.Log("called !!!");
-
         while (manaCrystals.Count != res + tmp)
         {
             if (manaCrystals.Count < res + tmp)
@@ -65,10 +63,10 @@ public class ManaGen : MonoBehaviour
 
         for (int i = 0; i < manaCrystals.Count; i++)
         {
-            Debug.Log($"{i}: {i + 1} <= {res + tmp - use} ??? {i + 1 <= res + tmp - use}");
+            //Debug.Log($"{i}: {i + 1} <= {res + tmp - use} ??? {i + 1 <= res + tmp - use}");
             if (i + 1 <= res + tmp - use)
             {
-                Debug.Log($"Full Crystal {i}");
+                //Debug.Log($"Full Crystal {i}");
                 manaCrystals[i].transform.GetComponent<ManaCrystalGen>().SetState(ManaCrystalState.FULL);
             }
             else

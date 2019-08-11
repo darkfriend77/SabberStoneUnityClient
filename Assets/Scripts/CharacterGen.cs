@@ -16,14 +16,14 @@ public class CharacterGen : BasicGen
 
     private GameObject _damage;
 
-    void Start()
+    public void Start()
     {
         _damageTimerInitial = 0.5f;
         _damageTimer = _damageTimerInitial;
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
         if (AnimState == AnimationState.DAMAGE)
         {
@@ -45,5 +45,15 @@ public class CharacterGen : BasicGen
         damageValue.GetComponent<TextMeshProUGUI>().text = value.ToString();
         AnimState = AnimationState.DAMAGE;
     }
+
+    //IEnumerator StartAnimDead()
+    //{
+    //    minionGen.AnimState = AnimationState.DEAD;
+    //    counter = 0;
+    //    yield return new WaitUntil(() => minionGen.AnimState == AnimationState.DONE);
+
+    //    minionGen.AnimState = AnimationState.NONE;
+    //}
+
 }
 
