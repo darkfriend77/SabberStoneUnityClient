@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json;
-using SabberStoneContract.Model;
-using SabberStoneCore.Config;
+﻿using SabberStoneCore.Config;
 using SabberStoneCore.Enums;
 using SabberStoneCore.Kettle;
 using SabberStoneCore.Model;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -44,15 +43,27 @@ public class GameController : MonoBehaviour
 
     public bool AllAnimStatesAreNone => EntitiesExt.Values.ToList().TrueForAll(p => p.GameObjectScript == null || p.GameObjectScript.AnimState == AnimationState.NONE);
 
-    private GameClient _gameClient;
+    private int _playerId;
+
+    public int PlayerId => _playerId;
 
     private Button _endTurnButton;
+
+    private Game _game;
 
     private bool DoUpdatedOptions;
 
     private int _updatingIndex;
 
     private System.Random _random;
+
+    private int _stepper;
+
+    private Queue<IPowerHistoryEntry> HistoryEntries { get; set; }
+
+    //public PowerChoices PowerChoices { get; private set; }
+
+    public List<PowerOption> PowerOptionList { get; private set; }
 
     public Text PowerHistoryText, PowerOptionsText, PowerChoicesText, PlayerStateText;
 
@@ -67,7 +78,8 @@ public class GameController : MonoBehaviour
 
     private PlayerClientState _playerState;
 
-    public PlayerClientState PlayerState { 
+    public PlayerClientState PlayerState
+    {
         get => _playerState;
         private set
         {
@@ -104,14 +116,128 @@ public class GameController : MonoBehaviour
 
         _updatingIndex = 0;
 
-        //InvokeRepeating("ReadHistory", 0f, 0.1f);
-        //InvokeRepeating("ReadPowerOptions", 0f, 2f);
+        _stepper = 0;
+
+        HistoryEntries = new Queue<IPowerHistoryEntry>();
+
+        CreateReferenceGame();
+    }
+
+    private void CreateReferenceGame()
+    {
+
+        Debug.Log($"Game creation is happening in a few seconds!!!");
+
+        var gameConfig = new GameConfig
+        {
+            //StartPlayer = 1,
+            FormatType = FormatType.FT_STANDARD,
+            Player1HeroClass = CardClass.MAGE,
+            Player1Deck = new List<Card>() {
+                Cards.FromName("Arcane Missiles"),
+                Cards.FromName("Frostwolf Grunt"),
+                Cards.FromName("Frostbolt"),
+                Cards.FromName("Kobold Geomancer"),
+                Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Fireball"),
+                Cards.FromName("Arcane Missiles"),
+                Cards.FromName("Frostbolt"),
+                Cards.FromName("Fireball"),
+                Cards.FromName("Polymorph"),
+                Cards.FromName("Polymorph"),
+                Cards.FromName("Water Elemental"),
+                Cards.FromName("Water Elemental"),
+                Cards.FromName("Flamestrike"),
+                Cards.FromName("Flamestrike"),
+                Cards.FromName("Goldshire Footman"),
+                Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Goldshire Footman"),
+                Cards.FromName("Frostwolf Grunt"),
+                Cards.FromName("Kobold Geomancer"),
+                Cards.FromName("Dalaran Mage"),
+                Cards.FromName("Dalaran Mage"),
+                Cards.FromName("Sen'jin Shieldmasta"),
+                Cards.FromName("Sen'jin Shieldmasta"),
+                Cards.FromName("Darkscale Healer"),
+                Cards.FromName("Darkscale Healer"),
+                Cards.FromName("Gurubashi Berserker"),
+                Cards.FromName("Gurubashi Berserker"),
+                Cards.FromName("Boulderfist Ogre"),
+                Cards.FromName("Boulderfist Ogre")
+            },
+            Player2HeroClass = CardClass.MAGE,
+            Player2Deck = new List<Card>() {
+                Cards.FromName("Arcane Missiles"),
+                Cards.FromName("Frostwolf Grunt"),
+                Cards.FromName("Frostbolt"),
+                Cards.FromName("Kobold Geomancer"),
+                Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Fireball"),
+                Cards.FromName("Arcane Missiles"),
+                Cards.FromName("Frostbolt"),
+                Cards.FromName("Fireball"),
+                Cards.FromName("Polymorph"),
+                Cards.FromName("Polymorph"),
+                Cards.FromName("Water Elemental"),
+                Cards.FromName("Water Elemental"),
+                Cards.FromName("Flamestrike"),
+                Cards.FromName("Flamestrike"),
+                Cards.FromName("Goldshire Footman"),
+                Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Goldshire Footman"),
+                Cards.FromName("Frostwolf Grunt"),
+                Cards.FromName("Kobold Geomancer"),
+                Cards.FromName("Dalaran Mage"),
+                Cards.FromName("Dalaran Mage"),
+                Cards.FromName("Sen'jin Shieldmasta"),
+                Cards.FromName("Sen'jin Shieldmasta"),
+                Cards.FromName("Darkscale Healer"),
+                Cards.FromName("Darkscale Healer"),
+                Cards.FromName("Gurubashi Berserker"),
+                Cards.FromName("Gurubashi Berserker"),
+                Cards.FromName("Boulderfist Ogre"),
+                Cards.FromName("Boulderfist Ogre")
+            },
+            SkipMulligan = true,
+            Shuffle = false,
+            FillDecks = false,
+            Logging = true,
+            History = true
+        };
+        var newGame = new Game(gameConfig);
+
+        // don't start when game is null
+        if (_game != null)
+        {
+            return;
+        }
+
+        _game = newGame;
+
+        Debug.Log($"Game creation done!");
+
+        _playerId = 1;
+
+        Debug.Log($"Watched playeyrId = {_playerId}!");
+
+    }
+
+    public void OnClickStepByStep()
+    {
+        switch (_stepper)
+        {
+            case 0:
+                _game.StartGame();
+                break;
+        }
+
+        _game.PowerHistory.Last.ForEach(p => HistoryEntries.Enqueue(p));
     }
 
     public void Update()
     {
         _updatingIndex++;
-        if (_updatingIndex > 3)
+        if (_updatingIndex > 1)
         {
             ReadHistory();
             _updatingIndex = 0;
@@ -120,75 +246,23 @@ public class GameController : MonoBehaviour
 
     public void OnClickEndTurn()
     {
-        var endTurnOption = _gameClient.PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
-        if (endTurnOption != null)
-        {
-            _endTurnButton.interactable = false;
-            PlayerState = PlayerClientState.Wait;
 
-            _gameClient.SendPowerOptionChoice(
-                new PowerOptionChoice()
-                {
-                    PowerOption = endTurnOption,
-                    Target = 0,
-                    Position = 0,
-                    SubOption = 0
-                });
-        }
-        else
-        {
-            throw new Exception("No endturn option available, something bad happened!");
-        }
-    }
-
-    public void SetGameClient(GameClient gameClient)
-    {
-        _gameClient = gameClient;
     }
 
     //public void ReadHistory(List<IPowerHistoryEntry> powerHistoryEntries)
     public void ReadHistory()
     {
-        if (_gameClient == null || _gameClient.GameClientState != GameClientState.InGame)
-        {
-            return;
-        }
-
-        var myStats = _mainGame.transform.Find(GetParentObject("Stats", _gameClient.MyUserInfo.PlayerId));
-        myStats.transform.Find("AccountName").GetComponent<Text>().text = $"{_gameClient.MyUserInfo.AccountName}[{_gameClient.MyUserInfo.PlayerId}]";
-
-        var opStats = _mainGame.transform.Find(GetParentObject("Stats", _gameClient.OpUserInfo.PlayerId));
-        opStats.transform.Find("AccountName").GetComponent<Text>().text = $"{_gameClient.OpUserInfo.AccountName}[{_gameClient.OpUserInfo.PlayerId}]";
-
-        //    await Task.Run(() => {
-
-        //        while (!AllAnimStatesAreNone)
-        //        {
-        //            Debug.Log("Waiting for animations to stop!");
-        //            Thread.Sleep(1000);
-        //        }
-
-        //        while (!_gameClient.HistoryEntries.IsEmpty)
-        //        {
-        //            while (_gameClient.HistoryEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
-        //            {
-        //                ReadHistoryEntry(historyEntry);
-        //                Thread.Sleep(50);
-        //            }
-
-        //            PowerHistoryText.text = _gameClient.HistoryEntries.Count.ToString();
-        //        }
-        //    });
-
+        IPowerHistoryEntry historyEntry;
         if (AllAnimStatesAreNone)
         {
-            if (_gameClient.HistoryEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
+            if (HistoryEntries.Count > 0)
             {
                 PlayerState = PlayerClientState.Wait;
+                historyEntry = HistoryEntries.Dequeue();
                 ReadHistoryEntry(historyEntry);
             }
 
-            if (_gameClient.HistoryEntries.Count() == 0 && PlayerState == PlayerClientState.Wait)
+            if (HistoryEntries.Count == 0 && PlayerState == PlayerClientState.Wait)
             {
                 if (ReadPowerChoices())
                 {
@@ -210,27 +284,27 @@ public class GameController : MonoBehaviour
 
     public bool ReadPowerChoices()
     {
-        if (_gameClient.PowerChoices == null)
-        {
-            _myChoices.gameObject.SetActive(false);
-            return false;
-        }
+        //if (PowerChoices == null)
+        //{
+        //    _myChoices.gameObject.SetActive(false);
+        //    return false;
+        //}
 
-        Debug.Log($"Current PowerChoices: {_gameClient.PowerChoices.ChoiceType} with {_gameClient.PowerChoices.Entities.Count} entities");
+        //Debug.Log($"Current PowerChoices: {PowerChoices.ChoiceType} with {PowerChoices.Entities.Count} entities");
 
-        PowerChoicesText.text = $"{_gameClient.PowerChoices.Entities.Count}{_gameClient.PowerChoices.ChoiceType.ToString().Substring(0, 1)}";
+        //PowerChoicesText.text = $"{PowerChoices.Entities.Count}{PowerChoices.ChoiceType.ToString().Substring(0, 1)}";
 
-        _myChoices.gameObject.SetActive(true);
+        //_myChoices.gameObject.SetActive(true);
 
-        _gameClient.PowerChoices.Entities.ForEach(p => {
+        //PowerChoices.Entities.ForEach(p => {
 
-            if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
-            {
-                throw new Exception($"Can't find entity with the id {p} in our dictionary!");
-            }
+        //    if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
+        //    {
+        //        throw new Exception($"Can't find entity with the id {p} in our dictionary!");
+        //    }
 
-            createCardIn(_myChoicesPanel, CardPrefab, entityExt);
-        });
+        //    createCardIn(_myChoicesPanel, CardPrefab, entityExt);
+        //});
 
         return true;
     }
@@ -238,21 +312,21 @@ public class GameController : MonoBehaviour
     //public void ReadPowerOptions(List<PowerOption> powerOptions)
     public bool ReadPowerOptions()
     {
-        if (_gameClient.PowerOptionList.Count() == 0)
+        if (PowerOptionList.Count() == 0)
         {
             _endTurnButton.interactable = false;
             return false;
         }
 
-        //Debug.Log($"Current PowerOptions: {_gameClient.PowerOptionList.Count()}");
+        //Debug.Log($"Current PowerOptions: {PowerOptionList.Count()}");
 
-        PowerOptionsText.text = _gameClient.PowerOptionList.Count().ToString();
+        PowerOptionsText.text = PowerOptionList.Count().ToString();
 
-        var endTurnOption = _gameClient.PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
+        var endTurnOption = PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
         _endTurnButton.interactable = endTurnOption != null;
 
         // display the other power options ...
-        foreach (var powerOption in _gameClient.PowerOptionList)
+        foreach (var powerOption in PowerOptionList)
         {
 
         }
@@ -263,55 +337,6 @@ public class GameController : MonoBehaviour
     public void OnClickRandomMove()
     {
 
-        if (_gameClient.PowerChoices != null)
-        {
-            var powerChoicesChoice = _gameClient.PowerChoices;
-            var powerChoicesId = _random.Next(powerChoicesChoice.Entities.Count);
-
-            _myChoicesPanel.gameObject.SetActive(false);
-
-            Debug.Log($"powerChoicesChoice => choices:{powerChoicesId}");
-            PlayerState = PlayerClientState.Wait;
-            _gameClient.SendPowerChoicesChoice(new PowerChoices() { ChoiceType = powerChoicesChoice.ChoiceType, Entities = new List<int>() { powerChoicesChoice.Entities[powerChoicesId] } });
-            return;
-        }
-
-        if (_gameClient.PowerOptionList.Count() == 0)
-        {
-            Debug.Log("No poweroptions to choose from!");
-            return;
-        }
-
-        var powerOptionChoice = RandomPowerOption(_gameClient.PowerOptionList);
-
-        // retry to get sme movements
-        if (_gameClient.PowerOptionList.Count() > 1 && powerOptionChoice.PowerOption.OptionType == OptionType.END_TURN)
-        {
-            powerOptionChoice = RandomPowerOption(_gameClient.PowerOptionList);
-        }
-
-        Debug.Log($"powerOptionChoice => " +
-                  $"target:{powerOptionChoice.Target}, " +
-                  $"position: 0, " +
-                  $"suboption: {powerOptionChoice.SubOption} " +
-                  $"{powerOptionChoice.PowerOption.Print()}");
-
-        _endTurnButton.interactable = powerOptionChoice.PowerOption.OptionType != OptionType.END_TURN;
-        PlayerState = PlayerClientState.Wait;
-        _gameClient.SendPowerOptionChoice(powerOptionChoice);
-    }
-
-    public PowerOptionChoice RandomPowerOption(List<PowerOption> powerOptionsList)
-    {
-        var powerOptionId = _random.Next(powerOptionsList.Count());
-        var powerOption = powerOptionsList.ElementAt(powerOptionId);
-        var target = powerOption.MainOption?.Targets != null && powerOption.MainOption.Targets.Count > 0
-            ? powerOption.MainOption.Targets.ElementAt(_random.Next(powerOption.MainOption.Targets.Count))
-            : 0;
-        var subOption = powerOption.SubOptions != null && powerOption.SubOptions.Count > 0
-            ? _random.Next(powerOption.SubOptions.Count)
-            : 0;
-        return new PowerOptionChoice() { PowerOption = powerOption, Target = target, Position = 0, SubOption = subOption };
     }
 
     private void ReadHistoryEntry(IPowerHistoryEntry historyEntry)
@@ -361,11 +386,6 @@ public class GameController : MonoBehaviour
 
     private void UpdateCreateGame(PowerHistoryCreateGame createGame)
     {
-
-        //var stats1 = _mainGame.transform.Find(GetParentObject("Stats", 1));
-        //stats1.Find("AccountName").GetComponent<Text>().text = _gameClient.Player1.AccountName;
-        //var stats2 = _mainGame.transform.Find(GetParentObject("Stats", 2));
-        //stats2.Find("AccountName").GetComponent<Text>().text = _gameClient.Player2.AccountName;
 
         EntitiesExt.Add(createGame.Game.Id, new EntityExt()
         {
@@ -432,7 +452,7 @@ public class GameController : MonoBehaviour
         {
             if (oldValue != tagChange.Value)
             {
-                 //Debug.Log($"[CHANGE_TAG] {tagChange.Tag}: {oldValue} => {tagChange.Value}");
+                //Debug.Log($"[CHANGE_TAG] {tagChange.Tag}: {oldValue} => {tagChange.Value}");
                 entityExt.Tags[tagChange.Tag] = tagChange.Value;
             }
         }
@@ -445,11 +465,11 @@ public class GameController : MonoBehaviour
         switch (tagChange.Tag)
         {
             case GameTag.MULLIGAN_STATE:
-                Debug.Log($"MULLIGAN_STATE = {(Mulligan) tagChange.Value}");
+                Debug.Log($"MULLIGAN_STATE = {(Mulligan)tagChange.Value}");
                 break;
 
             case GameTag.PLAYSTATE:
-                Debug.Log($"PLAYSTATE = {(PlayState) tagChange.Value}");
+                Debug.Log($"PLAYSTATE = {(PlayState)tagChange.Value}");
                 break;
 
             //case GameTag.HERO_ENTITY:
@@ -743,9 +763,9 @@ public class GameController : MonoBehaviour
         return GetParentObject(parentObjectName, entityExt.Tags[GameTag.CONTROLLER]);
     }
 
-    private string GetParentObject(string parentObjectName, int PlayerId)
+    private string GetParentObject(string parentObjectName, int playerId)
     {
-        if (_gameClient.PlayerId == PlayerId)
+        if (PlayerId == playerId)
         {
             return $"My{parentObjectName}";
         }
@@ -753,16 +773,6 @@ public class GameController : MonoBehaviour
         {
             return $"Op{parentObjectName}";
         }
-
-        //switch (PlayerId)
-        //{
-        //    case 1:
-        //        return $"My{parentObjectName}";
-        //    case 2:
-        //        return $"Op{parentObjectName}";
-        //    default:
-        //        return null;
-        //}
     }
 
     private void UpdateHideEntity(PowerHistoryHideEntity entity)
@@ -777,7 +787,7 @@ public class GameController : MonoBehaviour
 
     private void UpdateShowEntity(PowerHistoryShowEntity showEntity)
     {
-        // Debug.Log(showEntity.Print());
+        //Debug.Log(showEntity.Print());
         if (!EntitiesExt.TryGetValue(showEntity.Entity.Id, out EntityExt entity))
         {
             throw new Exception($"Can't find entity with the id {showEntity.Entity.Id} in our dictionary!");
@@ -786,7 +796,7 @@ public class GameController : MonoBehaviour
         // checking for same same
         UpdateTags(entity, showEntity.Entity.Name, showEntity.Entity.Tags);
 
-        var card = GetCardFromName(showEntity.Entity.Name);
+        var card = GetCardFromName(showEntity.Entity);
         if (card != null)
         {
             entity.Name = card.Name;
@@ -833,7 +843,7 @@ public class GameController : MonoBehaviour
         string name = "missing";
         string description = "missing";
 
-        var card = GetCardFromName(fullEntity.Entity.Name);
+        var card = GetCardFromName(fullEntity.Entity);
         if (card != null)
         {
             name = card.Name;
@@ -887,18 +897,26 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private Card GetCardFromName(string CardId)
+    private Card GetCardFromName(PowerHistoryEntity entity)
     {
-        if (CardId != null && CardId != string.Empty)
+        string cardId = entity.Name;
+
+        if (entity.Name == "")
         {
-            Card card = Cards.FromId(CardId);
+            Debug.Log($"We got an unknown entity with id {entity.Id}.");
+            return null;
+        }
+
+        if (cardId != null && cardId != string.Empty)
+        {
+            Card card = Cards.FromId(cardId);
             if (card != null)
             {
                 return card;
             }
         }
 
-        Debug.Log($"Can't find this card id '{CardId}'!");
+        Debug.LogError($"Can't find this card id '{cardId}'!");
         return null;
     }
 }
