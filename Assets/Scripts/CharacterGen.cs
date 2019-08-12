@@ -14,7 +14,7 @@ public class CharacterGen : BasicGen
 
     private float _damageTimer;
 
-    private GameObject _damage;
+    private GameObject _damageOrHeal;
 
     public void Start()
     {
@@ -25,25 +25,39 @@ public class CharacterGen : BasicGen
     // Update is called once per frame
     public void Update()
     {
-        if (AnimState == AnimationState.DAMAGE)
+        if (AnimState == AnimationState.HEALTHCHANGE)
         {
             _damageTimer -= Time.deltaTime;
 
             if (_damageTimer <= 0)
             {
-                Destroy(_damage);
+                Destroy(_damageOrHeal);
                 _damageTimer = _damageTimerInitial;
                 AnimState = AnimationState.NONE;
             }
         }
     }
 
-    internal void DamageAnim(int value)
+    internal void DamageOrHealAnim(int value)
     {
-        _damage = Instantiate(DamagePrefab, gameObject.transform).gameObject;
-        var damageValue = _damage.transform.Find("DamageValue").gameObject;
-        damageValue.GetComponent<TextMeshProUGUI>().text = value.ToString();
-        AnimState = AnimationState.DAMAGE;
+        _damageOrHeal = Instantiate(DamagePrefab, gameObject.transform).gameObject;
+        var healthChangeValue = _damageOrHeal.transform.Find("HealthChangeValue").gameObject;
+        healthChangeValue.GetComponent<TextMeshProUGUI>().text = value.ToString();
+        var damage = _damageOrHeal.transform.Find("Damage").gameObject;
+        var heal = _damageOrHeal.transform.Find("Heal").gameObject;
+        if (value < 0)
+        {
+            damage.SetActive(true);
+            heal.SetActive(false);
+            healthChangeValue.GetComponent<TextMeshProUGUI>().color = Color.red;
+        }
+        else
+        {
+            damage.SetActive(false);
+            heal.SetActive(true);
+            healthChangeValue.GetComponent<TextMeshProUGUI>().color = Color.green;
+        }
+        AnimState = AnimationState.HEALTHCHANGE;
     }
 
     //IEnumerator StartAnimDead()

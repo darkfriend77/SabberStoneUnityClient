@@ -561,7 +561,7 @@ public class GameController : MonoBehaviour
                 var characterGen = entityExt.GameObjectScript.gameObject.GetComponent<CharacterGen>();
                 if (characterGen != null)
                 {
-                    characterGen.DamageAnim(oldValue - tagChange.Value);
+                    characterGen.DamageOrHealAnim(oldValue - tagChange.Value);
                 }
                 else
                 {

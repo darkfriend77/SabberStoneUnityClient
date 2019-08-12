@@ -13,7 +13,7 @@ public enum AnimationState
     NONE,
     ATTACK,
     DESTROY,
-    DAMAGE,
+    HEALTHCHANGE,
     DEAD,
     DONE
 }
