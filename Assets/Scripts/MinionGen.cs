@@ -64,12 +64,18 @@ public class MinionGen : CharacterGen
         var front = transform.Find("Front");
         var frame = front.Find("Frame");
 
+        // TODO add effect for buff and debuff
+        var isBuffed = false;
+        var isDeBuffed = false;
+
         var attack = frame.Find("Attack");
         attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
+        attack.GetComponent<TextMeshProUGUI>().color = entity.Origin != null && entity.Origin[GameTag.ATK] < entity.Tags[GameTag.ATK] ? Color.green : Color.white;
 
         var health = frame.Find("Health");
         health.GetComponent<TextMeshProUGUI>().text = entity.Health.ToString();
-        health.GetComponent<TextMeshProUGUI>().color = entity.HealthColor;
+        health.GetComponent<TextMeshProUGUI>().color = entity.Tags[GameTag.DAMAGE] > 0 ? Color.red : entity.Origin != null && entity.Origin[GameTag.HEALTH] < entity.Tags[GameTag.HEALTH] ? Color.green : Color.white;
+        //health.GetComponent<TextMeshProUGUI>().color = entity.HealthColor;
 
         var taunt = front.Find("Taunt");
         taunt.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TAUNT) && entity.Tags[GameTag.TAUNT] == 1);

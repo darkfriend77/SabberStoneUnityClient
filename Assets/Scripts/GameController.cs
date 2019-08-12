@@ -137,7 +137,7 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Frostwolf Grunt"),
                 Cards.FromName("Frostbolt"),
                 Cards.FromName("Kobold Geomancer"),
-                Cards.FromName("Arcane Intellect"),
+                Cards.FromName("Shattered Sun Cleric"),
                 Cards.FromName("Goldshire Footman"),
                 Cards.FromName("Sen'jin Shieldmasta"),
                 Cards.FromName("Gurubashi Berserker"),
@@ -248,7 +248,7 @@ public class GameController : MonoBehaviour
             // ROUND 3 
             // turn player 1
             case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
-            case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition:1)); break;
+            case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition: 1)); break;
             case 12: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
             // turn player 2
             case 13: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Intellect")); break;
@@ -261,7 +261,14 @@ public class GameController : MonoBehaviour
             case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
             case 18: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
             // turn player 2
+            case 19: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
+            case 20: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
+            case 21: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
+            // ROUND 5 
+            // turn player 1
+            case 22: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
+            // turn player 2
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
@@ -381,7 +388,7 @@ public class GameController : MonoBehaviour
 
     private void ReadHistoryEntry(IPowerHistoryEntry historyEntry)
     {
-        //Debug.Log(historyEntry.Print());
+        Debug.Log(historyEntry.Print());
 
         switch (historyEntry.PowerType)
         {
@@ -789,7 +796,7 @@ public class GameController : MonoBehaviour
 
     private void DoZonePositionChange(EntityExt entityExt)
     {
-        switch ((Zone) entityExt.Tags[GameTag.ZONE])
+        switch ((Zone)entityExt.Tags[GameTag.ZONE])
         {
             case Zone.PLAY:
             case Zone.HAND:
@@ -861,6 +868,7 @@ public class GameController : MonoBehaviour
         var card = GetCardFromName(showEntity.Entity);
         if (card != null)
         {
+            entity.Origin = card.Tags;
             entity.Name = card.Name;
             entity.Description = card.Text;
         }
@@ -872,7 +880,7 @@ public class GameController : MonoBehaviour
 
     }
 
-    private void UpdateTags(EntityExt value, string name, Dictionary<GameTag, int> tags)
+    private void UpdateTags(EntityExt value, string name, IDictionary<GameTag, int> tags)
     {
         var oldTags = value.Tags;
         if (value.CardId != name)
@@ -902,22 +910,15 @@ public class GameController : MonoBehaviour
 
     private void UpdateFullEntity(PowerHistoryFullEntity fullEntity)
     {
-        string name = "missing";
-        string description = "missing";
-
         var card = GetCardFromName(fullEntity.Entity);
-        if (card != null)
-        {
-            name = card.Name;
-            description = card.Text;
-        }
 
         var entityExt = new EntityExt()
         {
+            Origin = card != null ? card.Tags : null,
             Id = fullEntity.Entity.Id,
             CardId = fullEntity.Entity.Name,
-            Name = name,
-            Description = description,
+            Name = card != null ? card.Name: "missing",
+            Description = card != null ? card.Text : "missing",
             Tags = fullEntity.Entity.Tags
         };
         EntitiesExt.Add(fullEntity.Entity.Id, entityExt);
@@ -963,22 +964,19 @@ public class GameController : MonoBehaviour
     {
         string cardId = entity.Name;
 
-        if (entity.Name == "")
+        if (cardId == null || cardId == string.Empty)
         {
             Debug.Log($"We got an unknown entity with id {entity.Id}.");
             return null;
         }
 
-        if (cardId != null && cardId != string.Empty)
+        Card card = Cards.FromId(cardId);
+        if (card != null)
         {
-            Card card = Cards.FromId(cardId);
-            if (card != null)
-            {
-                return card;
-            }
+            return card;
         }
 
-        Debug.LogError($"Can't find this card id '{cardId}'!");
+        Debug.LogError($"Can't find this card id '{cardId}' {entity.Print()}!");
         return null;
     }
 }
