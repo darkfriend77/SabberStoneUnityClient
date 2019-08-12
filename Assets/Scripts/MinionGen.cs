@@ -104,7 +104,11 @@ public class MinionGen : CharacterGen
         var stealth = front.Find("Stealth");
         stealth.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.STEALTH) && entity.Tags[GameTag.STEALTH] == 1);
 
-        //var deathrattle = frame.Find("Untargetable");
+        var untargetable = front.Find("Untargetable");
+        untargetable.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.UNTOUCHABLE) && entity.Tags[GameTag.UNTOUCHABLE] == 1);
+
+        var exhausted = front.Find("Exhausted");
+        exhausted.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.EXHAUSTED) && entity.Tags[GameTag.EXHAUSTED] == 1);
 
         var dead = front.Find("Dead");
         dead.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TO_BE_DESTROYED) && entity.Tags[GameTag.TO_BE_DESTROYED] == 1);

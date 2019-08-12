@@ -82,6 +82,9 @@ public class HeroGen : CharacterGen
         quest = frame.Find("Quest").gameObject;
         quest.SetActive(false);
 
+        var exhausted = frame.Find("Exhausted");
+        exhausted.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.EXHAUSTED) && entity.Tags[GameTag.EXHAUSTED] == 1);
+
         dead = frame.Find("Dead").gameObject;
         dead.SetActive(entity.Tags[GameTag.TO_BE_DESTROYED] == 1);
     }

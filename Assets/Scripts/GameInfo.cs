@@ -54,14 +54,14 @@ public class GameInfo : MonoBehaviour
                 gameObject.SetActive(true);
                 _message = Instantiate(MessagePrefab, gameObject.transform).gameObject;
                 _message.GetComponent<TextMeshProUGUI>().text = "YOU WON!";
-                _message.GetComponent<TextMeshProUGUI>().color = new Color(255, 0, 0, 0);
+                _message.GetComponent<TextMeshProUGUI>().color = new Color(0, 255, 0, 0);
                 _animateFlag = true;
                 break;
             case PlayState.LOST:
                 gameObject.SetActive(true);
                 _message = Instantiate(MessagePrefab, gameObject.transform).gameObject;
                 _message.GetComponent<TextMeshProUGUI>().text = "YOU LOST!";
-                _message.GetComponent<TextMeshProUGUI>().color = new Color(0, 255, 0, 0);
+                _message.GetComponent<TextMeshProUGUI>().color = new Color(255, 0, 0, 0);
                 _animateFlag = true;
                 break;
             case PlayState.TIED:

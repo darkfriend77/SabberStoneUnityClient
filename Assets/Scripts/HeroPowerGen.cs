@@ -20,6 +20,9 @@ public class HeroPowerGen : BasicGen
         var frame = front.Find("Frame");
         mana = frame.Find("Mana").GetComponent<TextMeshProUGUI>();
         mana.text = entity.Tags[GameTag.COST].ToString();
+
+        var exhausted = front.Find("Exhausted");
+        exhausted.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.EXHAUSTED) && entity.Tags[GameTag.EXHAUSTED] == 1);
     }
 
     internal void Generate(EntityExt entity)

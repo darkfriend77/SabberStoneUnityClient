@@ -639,6 +639,8 @@ public class GameController : MonoBehaviour
             case GameTag.IMMUNE:
             case GameTag.SILENCED:
             case GameTag.STEALTH:
+            case GameTag.UNTOUCHABLE:
+            case GameTag.EXHAUSTED:
             case GameTag.ARMOR:
             case GameTag.DURABILITY:
             case GameTag.DIVINE_SHIELD:
