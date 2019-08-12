@@ -66,6 +66,8 @@ public class GameController : MonoBehaviour
 
     public Text PowerHistoryText, PowerOptionsText, PowerChoicesText, PlayerStateText;
 
+    public EntityExt MyPlayer => EntitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == PlayerId);
+
     public enum PlayerClientState
     {
         None,
@@ -174,6 +176,7 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Dalaran Mage"),
                 Cards.FromName("Darkscale Healer"),
                 Cards.FromName("Kobold Geomancer"),
+                Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Kobold Geomancer"),
                 Cards.FromName("Fireball"),
                 Cards.FromName("Arcane Missiles"),
@@ -192,7 +195,6 @@ public class GameController : MonoBehaviour
                 Cards.FromName("Sen'jin Shieldmasta"),
                 Cards.FromName("Sen'jin Shieldmasta"),
                 Cards.FromName("Darkscale Healer"),
-                Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Gurubashi Berserker"),
                 Cards.FromName("Boulderfist Ogre"),
                 Cards.FromName("Boulderfist Ogre")
@@ -259,15 +261,47 @@ public class GameController : MonoBehaviour
             case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.BoardZone[0])); break;
             case 16: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
             case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
-            case 18: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            case 18: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 19: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
             // turn player 2
-            case 19: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
-            case 20: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
-            case 21: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            case 20: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
+            case 21: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
+            case 22: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
             // ROUND 5 
             // turn player 1
-            case 22: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
+            case 23: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
+            case 24: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
+            case 25: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 26: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 27: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            case 28: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 29: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
+            case 30: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
+            case 31: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Dalaran Mage")); break;
+            case 32: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+
+            // ROUND 6 
+            // turn player 1
+            case 33: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Gurubashi Berserker")); break;
+            case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 36: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            case 37: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 38: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
+            case 39: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Darkscale Healer")); break;
+            case 40: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+
+            // ROUND 7
+            // turn player 1
+            case 41: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2])); break;
+            case 42: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 43: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 44: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            case 45: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Fireball", _game.CurrentOpponent.Hero)); break;
+
             // turn player 2
 
             default:
@@ -388,7 +422,7 @@ public class GameController : MonoBehaviour
 
     private void ReadHistoryEntry(IPowerHistoryEntry historyEntry)
     {
-        Debug.Log(historyEntry.Print());
+        //Debug.Log(historyEntry.Print());
 
         switch (historyEntry.PowerType)
         {
@@ -433,7 +467,6 @@ public class GameController : MonoBehaviour
 
     private void UpdateCreateGame(PowerHistoryCreateGame createGame)
     {
-
         EntitiesExt.Add(createGame.Game.Id, new EntityExt()
         {
             Id = createGame.Game.Id,
@@ -515,7 +548,27 @@ public class GameController : MonoBehaviour
                 Debug.Log($"MULLIGAN_STATE = {(Mulligan)tagChange.Value}");
                 break;
 
+            case GameTag.STATE:
+                // TODO Implement game end screen .... completet
+                Debug.Log($"STATE = {(State)tagChange.Value}");
+                switch ((State)tagChange.Value)
+                {
+                    case State.INVALID:
+                        break;
+                    case State.LOADING:
+                        break;
+                    case State.RUNNING:
+                        break;
+                    case State.COMPLETE:
+                        var playState = (PlayState)MyPlayer.Tags[GameTag.PLAYSTATE];
+                        Debug.Log($"MyPlayer playState = {playState}");
+                        GameFinished(playState);
+                        break;
+                }
+                break;
+
             case GameTag.PLAYSTATE:
+                // TODO Implement game end screen ....
                 Debug.Log($"PLAYSTATE = {(PlayState)tagChange.Value}");
                 break;
 
@@ -611,6 +664,11 @@ public class GameController : MonoBehaviour
                 break;
         }
 
+    }
+
+    private void GameFinished(PlayState playState)
+    {
+        _mainGame.transform.Find("GameInfo").GetComponent<GameInfo>().GameInfoAnim(playState);
     }
 
     private void DoZoneChange(EntityExt entityExt, Zone prevZone, Zone nextZone)
