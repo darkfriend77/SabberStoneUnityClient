@@ -28,6 +28,13 @@ public class AnimationGen : BasicGen
     private Vector3 _baseScale;
     private Vector3 _scale;
 
+    private Vector3 cachedScale;
+    private Vector3 cachedPosition;
+    private Quaternion cachedRotation;
+    private Transform cachedParent;
+    private int cachedSiblingIndex;
+    private GameObject _attackTarget;
+
     public void Start()
     {
         var rootGameObjectList = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
@@ -51,6 +58,22 @@ public class AnimationGen : BasicGen
     {
         switch(AnimState)
         {
+            case AnimationState.ATTACK:
+                transform.position = Vector3.Lerp(transform.position, _attackTarget.transform.position, 0.10f);
+
+                var mininionDistance = Vector3.Distance(transform.position, _attackTarget.transform.position);
+
+                if (mininionDistance < 50)
+                {
+                    _attackTarget = null;
+                    transform.localScale = cachedScale;
+                    transform.SetPositionAndRotation(cachedPosition, Quaternion.identity);
+                    transform.SetParent(cachedParent, false);
+                    transform.SetSiblingIndex(cachedSiblingIndex);
+                    AnimState = AnimationState.NONE;
+                }
+
+                break;
             case AnimationState.TARGETING:
                 _targetingTimer -= Time.deltaTime;
 
@@ -58,7 +81,6 @@ public class AnimationGen : BasicGen
                 _targeting.transform.localScale = Vector3.Lerp(_targeting.transform.localScale, _scale, 0.1f);
 
                 var distance = Vector3.Distance(_targeting.transform.position, _targetGameObject.transform.position);
-                Debug.Log(Vector3.Distance(_targeting.transform.position, _targetGameObject.transform.position));
 
                 if (distance < 5)
                 {
@@ -112,6 +134,21 @@ public class AnimationGen : BasicGen
                 }
                 break;
         }
+    }
+
+
+    public void MinionAttackAnim(GameObject attackTarget)
+    {
+        cachedScale = transform.localScale;
+        cachedPosition = transform.position;
+        cachedRotation = transform.rotation;
+        cachedParent = transform.parent;
+        cachedSiblingIndex = transform.GetSiblingIndex();
+
+        _attackTarget = attackTarget;
+
+        transform.SetParent(transform.parent.parent, true);
+        AnimState = AnimationState.ATTACK;
     }
 
     internal void TargetingAnim(GameObject targetGameObject)

@@ -463,7 +463,8 @@ public partial class  GameController : MonoBehaviour
                 if (entityExt == defendingEntity && attackingEntity.Zone == Zone.PLAY && attackingEntity.CardType == CardType.MINION)
                 {
                     Debug.Log(".. attack animation now !!!");
-                    attackingEntity.GameObjectScript.transform.GetComponent<MinionAnimation>().AnimAttack(defendingEntity.GameObjectScript.gameObject);
+                    //attackingEntity.GameObjectScript.transform.GetComponent<MinionAnimation>().AnimAttack(defendingEntity.GameObjectScript.gameObject);
+                    attackingEntity.GameObjectScript.transform.GetComponent<AnimationGen>().MinionAttackAnim(defendingEntity.GameObjectScript.gameObject);
                 }
 
                 var characterGen = entityExt.GameObjectScript.gameObject.GetComponent<AnimationGen>();
