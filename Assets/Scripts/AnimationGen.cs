@@ -63,7 +63,7 @@ public class AnimationGen : BasicGen
 
                 var mininionDistance = Vector3.Distance(transform.position, _attackTarget.transform.position);
 
-                if (mininionDistance < 50)
+                if (mininionDistance < 30)
                 {
                     _attackTarget = null;
                     transform.localScale = cachedScale;

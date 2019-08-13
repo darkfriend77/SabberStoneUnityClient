@@ -124,11 +124,11 @@ public partial class  GameController : MonoBehaviour
         HistoryEntries = new Queue<IPowerHistoryEntry>();
 
 
-        //_gameStepper = PaladinVsPriestMoves;
-        //_game = new Game(PaladinVsPriest);
+        _gameStepper = PaladinVsPriestMoves;
+        _game = new Game(PaladinVsPriest);
 
-        _gameStepper = MageVsMageMoves;
-        _game = new Game(MageVsMage);
+        //_gameStepper = MageVsMageMoves;
+        //_game = new Game(MageVsMage);
 
         _playerId = 1;
         Debug.Log($"Watched playeyrId = {_playerId}!");
@@ -460,7 +460,7 @@ public partial class  GameController : MonoBehaviour
 
             case GameTag.DAMAGE:
                 Debug.Log($"Doing damage ... to {entityExt.Name}");
-                if (entityExt == defendingEntity && attackingEntity.Zone == Zone.PLAY && attackingEntity.CardType == CardType.MINION)
+                if (entityExt == defendingEntity && attackingEntity.Zone == Zone.PLAY) // && attackingEntity.CardType == CardType.MINION)
                 {
                     Debug.Log(".. attack animation now !!!");
                     //attackingEntity.GameObjectScript.transform.GetComponent<MinionAnimation>().AnimAttack(defendingEntity.GameObjectScript.gameObject);
