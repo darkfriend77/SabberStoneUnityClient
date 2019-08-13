@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GameController : MonoBehaviour
+public partial class  GameController : MonoBehaviour
 {
     private Dictionary<int, EntityExt> EntitiesExt = new Dictionary<int, EntityExt>();
 
@@ -68,6 +68,8 @@ public class GameController : MonoBehaviour
 
     public EntityExt MyPlayer => EntitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == PlayerId);
 
+    private Action<int, Game> _gameStepper;
+
     public enum PlayerClientState
     {
         None,
@@ -121,204 +123,16 @@ public class GameController : MonoBehaviour
 
         HistoryEntries = new Queue<IPowerHistoryEntry>();
 
-        CreateReferenceGame();
-    }
 
-    private void CreateReferenceGame()
-    {
-
-        Debug.Log($"Game creation is happening in a few seconds!!!");
-
-        var gameConfig = new GameConfig
-        {
-            StartPlayer = 1,
-            FormatType = FormatType.FT_STANDARD,
-            Player1HeroClass = CardClass.MAGE,
-            Player1Deck = new List<Card>() {
-                Cards.FromName("Arcane Missiles"),
-                Cards.FromName("Frostwolf Grunt"),
-                Cards.FromName("Frostbolt"),
-                Cards.FromName("Kobold Geomancer"),
-                Cards.FromName("Shattered Sun Cleric"),
-                Cards.FromName("Goldshire Footman"),
-                Cards.FromName("Sen'jin Shieldmasta"),
-                Cards.FromName("Gurubashi Berserker"),
-                Cards.FromName("Fireball"),
-                Cards.FromName("Arcane Missiles"),
-                Cards.FromName("Frostbolt"),
-                Cards.FromName("Fireball"),
-                Cards.FromName("Polymorph"),
-                Cards.FromName("Polymorph"),
-                Cards.FromName("Water Elemental"),
-                Cards.FromName("Water Elemental"),
-                Cards.FromName("Flamestrike"),
-                Cards.FromName("Flamestrike"),
-                Cards.FromName("Arcane Intellect"),
-                Cards.FromName("Goldshire Footman"),
-                Cards.FromName("Frostwolf Grunt"),
-                Cards.FromName("Kobold Geomancer"),
-                Cards.FromName("Dalaran Mage"),
-                Cards.FromName("Dalaran Mage"),
-                Cards.FromName("Sen'jin Shieldmasta"),
-                Cards.FromName("Darkscale Healer"),
-                Cards.FromName("Darkscale Healer"),
-                Cards.FromName("Gurubashi Berserker"),
-                Cards.FromName("Boulderfist Ogre"),
-                Cards.FromName("Boulderfist Ogre")
-            },
-            Player2HeroClass = CardClass.MAGE,
-            Player2Deck = new List<Card>() {
-                Cards.FromName("Arcane Missiles"),
-                Cards.FromName("Frostwolf Grunt"),
-                Cards.FromName("Goldshire Footman"),
-                Cards.FromName("Frostbolt"),
-                Cards.FromName("Arcane Intellect"),
-                Cards.FromName("Dalaran Mage"),
-                Cards.FromName("Darkscale Healer"),
-                Cards.FromName("Kobold Geomancer"),
-                Cards.FromName("Gurubashi Berserker"),
-                Cards.FromName("Kobold Geomancer"),
-                Cards.FromName("Fireball"),
-                Cards.FromName("Arcane Missiles"),
-                Cards.FromName("Frostbolt"),
-                Cards.FromName("Fireball"),
-                Cards.FromName("Polymorph"),
-                Cards.FromName("Polymorph"),
-                Cards.FromName("Water Elemental"),
-                Cards.FromName("Water Elemental"),
-                Cards.FromName("Flamestrike"),
-                Cards.FromName("Flamestrike"),
-                Cards.FromName("Arcane Intellect"),
-                Cards.FromName("Goldshire Footman"),
-                Cards.FromName("Frostwolf Grunt"),
-                Cards.FromName("Dalaran Mage"),
-                Cards.FromName("Sen'jin Shieldmasta"),
-                Cards.FromName("Sen'jin Shieldmasta"),
-                Cards.FromName("Darkscale Healer"),
-                Cards.FromName("Gurubashi Berserker"),
-                Cards.FromName("Boulderfist Ogre"),
-                Cards.FromName("Boulderfist Ogre")
-            },
-            SkipMulligan = true,
-            Shuffle = false,
-            FillDecks = false,
-            Logging = true,
-            History = true
-        };
-        var newGame = new Game(gameConfig);
-
-        // don't start when game is null
-        if (_game != null)
-        {
-            return;
-        }
-
-        _game = newGame;
-
-        Debug.Log($"Game creation done!");
-
+        _gameStepper = PaladinVsPriestMoves;
+        _game = new Game(PaladinVsPriest);
         _playerId = 1;
-
         Debug.Log($"Watched playeyrId = {_playerId}!");
-
     }
 
     public void OnClickStepByStep()
     {
-
-        switch (_stepper)
-        {
-            case 0: _game.StartGame(); break;
-
-            // ROUND 1 
-            // turn player 1
-            case 1: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles")); break;
-            case 2: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
-            case 3: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "The Coin")); break;
-            case 4: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
-            case 5: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// --- FULL GAME ---
-            //// ROUND 1 
-            //// turn player 1
-            //case 1: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles")); break;
-            //case 2: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 3: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "The Coin")); break;
-            //case 4: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
-            //case 5: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// ROUND 2 
-            //// turn player 1
-            //case 6: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.BoardZone[0])); break;
-            //case 7: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 8: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman")); break;
-            //case 9: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// ROUND 3 
-            //// turn player 1
-            //case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
-            //case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition: 1)); break;
-            //case 12: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 13: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Intellect")); break;
-            //case 14: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// ROUND 4 
-            //// turn player 1
-            //case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.BoardZone[0])); break;
-            //case 16: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
-            //case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
-            //case 18: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 19: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 20: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
-            //case 21: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
-            //case 22: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// ROUND 5 
-            //// turn player 1
-            //case 23: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
-            //case 24: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
-            //case 25: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 26: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            //case 27: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            //case 28: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 29: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
-            //case 30: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
-            //case 31: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Dalaran Mage")); break;
-            //case 32: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// ROUND 6 
-            //// turn player 1
-            //case 33: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Gurubashi Berserker")); break;
-            //case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            //case 36: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            //case 37: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 38: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
-            //case 39: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Darkscale Healer")); break;
-            //case 40: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            //// ROUND 7
-            //// turn player 1
-            //case 41: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2])); break;
-            //case 42: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 43: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            //case 44: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            //case 45: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Fireball", _game.CurrentOpponent.Hero)); break;
-
-            //// ENDED
-
-            default:
-                Debug.Log("Next step is not implemented, please add it!");
-                return;
-        }
-
+        _gameStepper(_stepper, _game);
         _game.PowerHistory.Last.ForEach(p => HistoryEntries.Enqueue(p));
 
         _stepper++;
@@ -432,7 +246,7 @@ public class GameController : MonoBehaviour
 
     private void ReadHistoryEntry(IPowerHistoryEntry historyEntry)
     {
-        //Debug.Log(historyEntry.Print());
+        Debug.Log(historyEntry.Print());
 
         switch (historyEntry.PowerType)
         {
@@ -540,10 +354,10 @@ public class GameController : MonoBehaviour
 
             Debug.Log($"Source {sourceEntityExt.Name} is targeting {targetEntityExt.Name} !!!");
 
-            var heroPowerGen = sourceEntityExt.GameObjectScript.GetComponent<HeroPowerGen>();
-            if (heroPowerGen != null)
+            var targetingGen = sourceEntityExt.GameObjectScript.GetComponent<TargetingGen>();
+            if (targetingGen != null)
             {
-                heroPowerGen.TargetingAnim(targetEntityExt.GameObjectScript.gameObject);
+                targetingGen.TargetingAnim(targetEntityExt.GameObjectScript.gameObject);
             }
         }
     }
@@ -1023,12 +837,24 @@ public class GameController : MonoBehaviour
                 break;
 
             case Zone.PLAY:
-                if (cardType == CardType.HERO_POWER)
+                switch (cardType)
                 {
-                    var heroPowerParent = _mainGame.transform.Find(GetParentObject("HeroPower", entityExt));
-                    var heroPower = Instantiate(HeroPowerPrefab, heroPowerParent).gameObject.GetComponent<HeroPowerGen>();
-                    heroPower.Generate(entityExt);
-                    entityExt.GameObjectScript = heroPower;
+                    case CardType.HERO_POWER:
+                        var heroPowerParent = _mainGame.transform.Find(GetParentObject("HeroPower", entityExt));
+                        var heroPower = Instantiate(HeroPowerPrefab, heroPowerParent).gameObject.GetComponent<HeroPowerGen>();
+                        heroPower.Generate(entityExt);
+                        entityExt.GameObjectScript = heroPower;
+                        break;
+
+                    // Summon Minion
+                    case CardType.MINION:
+                        var gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
+                        var minionGen = gameObject.GetComponent<MinionGen>();
+                        minionGen.Generate(entityExt);
+                        entityExt.GameObjectScript = minionGen;
+
+                        _mainGame.transform.Find(GetParentObject("Board", entityExt)).GetComponent<CardContainer>().Add(gameObject);
+                        break;
                 }
                 break;
 

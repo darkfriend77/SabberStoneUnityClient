@@ -11,13 +11,14 @@ using SabberStoneCore.Model.Entities;
 using System;
 using SabberStoneCore.Kettle;
 
-public class CardGen : BasicGen
+public class CardGen : TargetingGen
 {
     private float _destroyTimer;
     private float _colorFade;
 
-    void Start()
+    new void Start()
     {
+        base.Start();
 
         _destroyTimer = 0.5f;
         _colorFade = 1;
@@ -25,15 +26,9 @@ public class CardGen : BasicGen
         AnimState = AnimationState.NONE;
     }
 
-    internal void Show(bool showFlag)
+    new void Update()
     {
-        transform.Find("Front").gameObject.SetActive(showFlag);
-        transform.Find("Back").gameObject.SetActive(!showFlag);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
+        base.Update();
         if (AnimState == AnimationState.DESTROY)
         {
             _destroyTimer -= Time.deltaTime;
@@ -60,6 +55,12 @@ public class CardGen : BasicGen
 
             }
         }
+    }
+
+    internal void Show(bool showFlag)
+    {
+        transform.Find("Front").gameObject.SetActive(showFlag);
+        transform.Find("Back").gameObject.SetActive(!showFlag);
     }
 
     public override void UpdateEntity(EntityExt entity)
