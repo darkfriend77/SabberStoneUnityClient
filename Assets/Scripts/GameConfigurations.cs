@@ -26,8 +26,9 @@ public partial class GameController
             Cards.FromName("Consecration"),
             Cards.FromName("Hammer of Wrath"),
             Cards.FromName("Truesilver Champion"),
-            Cards.FromName("Guardian of Kings"),
             Cards.FromName("Razorfen Hunter"),
+            Cards.FromName("Razorfen Hunter"),
+            Cards.FromName("Guardian of Kings"),
             Cards.FromName("Shattered Sun Cleric"),
             Cards.FromName("Chillwind Yeti"),
             Cards.FromName("Frostwolf Warlord"),
@@ -36,7 +37,6 @@ public partial class GameController
             Cards.FromName("Acidic Swamp Ooze"),
             Cards.FromName("Murloc Tidehunter"),
             Cards.FromName("River Crocolisk"),
-            Cards.FromName("Razorfen Hunter"),
             Cards.FromName("Shattered Sun Cleric"),
             Cards.FromName("Chillwind Yeti"),
             Cards.FromName("Frostwolf Warlord"),
@@ -64,7 +64,7 @@ public partial class GameController
             Cards.FromName("Ironfur Grizzly"),
             Cards.FromName("Ironfur Grizzly"),
             Cards.FromName("Shattered Sun Cleric"),
-            Cards.FromName("Shattered Sun Cleric"),
+            Cards.FromName("Holy Nova"),
             Cards.FromName("Chillwind Yeti"),
             Cards.FromName("Chillwind Yeti"),
             Cards.FromName("Gnomish Inventor"),
@@ -81,7 +81,8 @@ public partial class GameController
             Cards.FromName("Shadow Word: Death"),
             Cards.FromName("Holy Nova"),
             Cards.FromName("Mind Control"),
-            Cards.FromName("Holy Nova")
+            Cards.FromName("Holy Nova"),
+            Cards.FromName("Shattered Sun Cleric")
             },
         SkipMulligan = true,
         Shuffle = false,
@@ -106,58 +107,59 @@ public partial class GameController
             // turn player 1
             case 3: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Murloc Tidehunter")); break;
             case 4: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 5: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Holy Smite", _game.CurrentOpponent.BoardZone[0])); break;
+            case 6: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
             // ROUND 3 
             // turn player 1
-            case 5: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Holy Smite", _game.CurrentOpponent.BoardZone[0])); break;
-            case 6: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
             case 7: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
             case 8: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer)); break;
             case 9: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-
-            // ROUND 3 
-            // turn player 1
+            // turn player 2
             case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "The Coin")); break;
             case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Northshire Cleric")); break;
             case 12: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Power Word: Shield", _game.CurrentPlayer.BoardZone[0])); break;
             case 13: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
+
+            // ROUND 3 
+            // turn player 1
             case 14: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
             case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
             case 16: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Truesilver Champion")); break;
             case 17: _game.Process(HeroAttackTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
             case 18: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 19: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0])); break;
+            case 20: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Acidic Swamp Ooze")); break;
+            case 21: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            //// ROUND 4 
-            //// turn player 1
-            //case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.BoardZone[0])); break;
-            //case 16: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
-            //case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
-            //case 18: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 19: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 20: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
-            //case 21: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
-            //case 22: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // ROUND 4 Razorfen Hunter
+            // turn player 1
+            case 22: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Razorfen Hunter")); break;
+            case 23: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer)); break;
+            case 24: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 25: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Divine Spirit", _game.CurrentPlayer.BoardZone[0])); break;
+            case 26: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Shadow Word: Pain", _game.CurrentOpponent.BoardZone[0])); break;
+            case 27: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 28: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 29: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            //// ROUND 5 
-            //// turn player 1
-            //case 23: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
-            //case 24: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
-            //case 25: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 26: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            //case 27: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            //case 28: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 29: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
-            //case 30: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
-            //case 31: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Dalaran Mage")); break;
-            //case 32: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // ROUND 5 
+            // turn player 1
+            case 30: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Warlord")); break;
+            case 31: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 32: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
+            case 33: _game.Process(PlayCardTask.Minion(_game.CurrentPlayer, "Ironfur Grizzly")); break;
+            case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 36: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            //// ROUND 6 
-            //// turn player 1
-            //case 33: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Gurubashi Berserker")); break;
+            // ROUND 6 
+            // turn player 1
+            case 37: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Stormwind Champion")); break;
             //case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
             //case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
             //case 36: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
