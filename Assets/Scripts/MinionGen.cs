@@ -8,55 +8,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MinionGen : CharacterGen
+public class MinionGen : AnimationGen
 {
-    private float _destroyTimer;
-    private float _colorFade;
-
-    //// Start is called before the first frame update
-    new void Start()
-    {
-        base.Start();
-
-        _destroyTimer = 0.5f;
-        _colorFade = 1;
-
-        AnimState = AnimationState.NONE;
-    }
-
-    // Update is called once per frame
-    new void Update()
-    {
-        base.Update();
-
-        if (AnimState == AnimationState.DESTROY)
-        {
-            _destroyTimer -= Time.deltaTime;
-
-            if (_destroyTimer <= 0)
-            {
-                _colorFade -= 0.01f;
-
-                foreach (var image in GetComponentsInChildren<Image>())
-                {
-                    image.color = new Color(image.color.r, image.color.g, image.color.b, _colorFade);
-                }
-
-                foreach (var textMesh in GetComponentsInChildren<TextMeshProUGUI>())
-                {
-                    textMesh.color = new Color(textMesh.color.r, textMesh.color.g, textMesh.color.b, _colorFade);
-                }
-
-                if (_colorFade <= 0)
-                {
-                    Destroy(gameObject);
-                    AnimState = AnimationState.NONE;
-                }
-
-            }
-        }
-    }
-
     public override void UpdateEntity(EntityExt entity)
     {
         base.UpdateEntity(entity);
@@ -148,8 +101,4 @@ public class MinionGen : CharacterGen
         UpdateEntity(entity);
     }
 
-    internal void DestroyAnim()
-    {
-        AnimState = AnimationState.DESTROY;
-    }
 }

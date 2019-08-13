@@ -9,7 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HeroGen : CharacterGen
+public class HeroGen : AnimationGen
 {
     private Hero hero;
 
@@ -32,16 +32,6 @@ public class HeroGen : CharacterGen
     private GameObject dead;
 
     private PowerHistoryEntity heroEntity;
-
-    new void Start()
-    {
-        base.Start();
-    }
-
-    new void Update()
-    {
-        base.Update();
-    }
 
     public override void UpdateEntity(EntityExt entity)
     {

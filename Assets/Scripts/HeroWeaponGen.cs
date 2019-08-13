@@ -7,7 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HeroWeaponGen : BasicGen
+public class HeroWeaponGen : AnimationGen
 {
 
     public override void UpdateEntity(EntityExt entity)

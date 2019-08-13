@@ -562,6 +562,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b92d4d4365597b2489f9f02ad6423f37, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DamagePrefab: {fileID: 6406376240394833541, guid: 1786ab9240ff0764cb3fc506ab60caea,
+    type: 3}
   TargetingPrefab: {fileID: 507561875979002731, guid: 8b97af146acf13e4689a1b3d0ced6c70,
     type: 3}
 --- !u!1 &8771581787489271955

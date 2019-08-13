@@ -124,8 +124,12 @@ public partial class  GameController : MonoBehaviour
         HistoryEntries = new Queue<IPowerHistoryEntry>();
 
 
-        _gameStepper = PaladinVsPriestMoves;
-        _game = new Game(PaladinVsPriest);
+        //_gameStepper = PaladinVsPriestMoves;
+        //_game = new Game(PaladinVsPriest);
+
+        _gameStepper = MageVsMageMoves;
+        _game = new Game(MageVsMage);
+
         _playerId = 1;
         Debug.Log($"Watched playeyrId = {_playerId}!");
     }
@@ -246,7 +250,7 @@ public partial class  GameController : MonoBehaviour
 
     private void ReadHistoryEntry(IPowerHistoryEntry historyEntry)
     {
-        Debug.Log(historyEntry.Print());
+        //Debug.Log(historyEntry.Print());
 
         switch (historyEntry.PowerType)
         {
@@ -354,10 +358,10 @@ public partial class  GameController : MonoBehaviour
 
             Debug.Log($"Source {sourceEntityExt.Name} is targeting {targetEntityExt.Name} !!!");
 
-            var targetingGen = sourceEntityExt.GameObjectScript.GetComponent<TargetingGen>();
-            if (targetingGen != null)
+            var animationGen = sourceEntityExt.GameObjectScript.GetComponent<AnimationGen>();
+            if (animationGen != null)
             {
-                targetingGen.TargetingAnim(targetEntityExt.GameObjectScript.gameObject);
+                animationGen.TargetingAnim(targetEntityExt.GameObjectScript.gameObject);
             }
         }
     }
@@ -462,7 +466,7 @@ public partial class  GameController : MonoBehaviour
                     attackingEntity.GameObjectScript.transform.GetComponent<MinionAnimation>().AnimAttack(defendingEntity.GameObjectScript.gameObject);
                 }
 
-                var characterGen = entityExt.GameObjectScript.gameObject.GetComponent<CharacterGen>();
+                var characterGen = entityExt.GameObjectScript.gameObject.GetComponent<AnimationGen>();
                 if (characterGen != null)
                 {
                     characterGen.DamageOrHealAnim(oldValue - tagChange.Value);

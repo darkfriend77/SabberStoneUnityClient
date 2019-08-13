@@ -8,19 +8,9 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HeroPowerGen : TargetingGen
+public class HeroPowerGen : AnimationGen
 {
     private TextMeshProUGUI mana;
-
-    new void Start()
-    {
-        base.Start();
-    }
-
-    new void Update()
-    {
-        base.Update();
-    }
 
     public override void UpdateEntity(EntityExt entity)
     {
