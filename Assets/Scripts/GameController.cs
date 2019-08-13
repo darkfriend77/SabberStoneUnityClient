@@ -236,73 +236,83 @@ public class GameController : MonoBehaviour
             case 2: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
             // turn player 2
             case 3: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "The Coin")); break;
-            case 4: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
+            case 4: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
             case 5: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // ROUND 2 
-            // turn player 1
-            case 6: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.BoardZone[0])); break;
-            case 7: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
-            case 8: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman")); break;
-            case 9: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// --- FULL GAME ---
+            //// ROUND 1 
+            //// turn player 1
+            //case 1: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Missiles")); break;
+            //case 2: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// turn player 2
+            //case 3: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "The Coin")); break;
+            //case 4: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
+            //case 5: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // ROUND 3 
-            // turn player 1
-            case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
-            case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition: 1)); break;
-            case 12: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
-            case 13: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Intellect")); break;
-            case 14: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// ROUND 2 
+            //// turn player 1
+            //case 6: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.BoardZone[0])); break;
+            //case 7: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// turn player 2
+            //case 8: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman")); break;
+            //case 9: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // ROUND 4 
-            // turn player 1
-            case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.BoardZone[0])); break;
-            case 16: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
-            case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
-            case 18: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            case 19: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
-            case 20: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
-            case 21: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
-            case 22: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// ROUND 3 
+            //// turn player 1
+            //case 10: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Frostwolf Grunt")); break;
+            //case 11: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Goldshire Footman", zonePosition: 1)); break;
+            //case 12: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// turn player 2
+            //case 13: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Arcane Intellect")); break;
+            //case 14: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // ROUND 5 
-            // turn player 1
-            case 23: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
-            case 24: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
-            case 25: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            case 26: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            case 27: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            case 28: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
-            case 29: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
-            case 30: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
-            case 31: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Dalaran Mage")); break;
-            case 32: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// ROUND 4 
+            //// turn player 1
+            //case 15: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.BoardZone[0])); break;
+            //case 16: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
+            //case 17: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer", zonePosition: 1)); break;
+            //case 18: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            //case 19: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// turn player 2
+            //case 20: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Kobold Geomancer")); break;
+            //case 21: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Frostbolt", _game.CurrentOpponent.Hero)); break;
+            //case 22: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // ROUND 6 
-            // turn player 1
-            case 33: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Gurubashi Berserker")); break;
-            case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            case 36: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            case 37: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            // turn player 2
-            case 38: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
-            case 39: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Darkscale Healer")); break;
-            case 40: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// ROUND 5 
+            //// turn player 1
+            //case 23: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Shattered Sun Cleric", _game.CurrentPlayer.BoardZone[0])); break;
+            //case 24: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.Hero)); break;
+            //case 25: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            //case 26: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            //case 27: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            //case 28: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// turn player 2
+            //case 29: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentOpponent.BoardZone[0])); break;
+            //case 30: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[0])); break;
+            //case 31: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Dalaran Mage")); break;
+            //case 32: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // ROUND 7
-            // turn player 1
-            case 41: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2])); break;
-            case 42: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            case 43: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            case 44: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            case 45: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Fireball", _game.CurrentOpponent.Hero)); break;
+            //// ROUND 6 
+            //// turn player 1
+            //case 33: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Gurubashi Berserker")); break;
+            //case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            //case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            //case 36: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            //case 37: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            //// turn player 2
+            //case 38: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
+            //case 39: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Darkscale Healer")); break;
+            //case 40: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            // turn player 2
+            //// ROUND 7
+            //// turn player 1
+            //case 41: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2])); break;
+            //case 42: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            //case 43: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            //case 44: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            //case 45: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Fireball", _game.CurrentOpponent.Hero)); break;
+
+            //// ENDED
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
@@ -506,7 +516,7 @@ public class GameController : MonoBehaviour
 
     private void UpdateMetaData(PowerHistoryMetaData metaData)
     {
-        Debug.Log($"{metaData.Print()}");
+        //Debug.Log($"{metaData.Print()}");
     }
 
     private void UpdateBlockEnd(PowerHistoryBlockEnd blockEnd)
@@ -515,7 +525,27 @@ public class GameController : MonoBehaviour
 
     private void UpdateBlockStart(PowerHistoryBlockStart blockStart)
     {
-        //Debug.Log(blockStart.BlockType);
+        //Debug.Log(blockStart.Print());
+        if (blockStart.BlockType == BlockType.PLAY && blockStart.Target != 0)
+        {
+            if (!EntitiesExt.TryGetValue(blockStart.Source, out EntityExt sourceEntityExt))
+            {
+                throw new Exception($"Can't find entity with the source id {blockStart.Source} in our dictionary!");
+            }
+
+            if (!EntitiesExt.TryGetValue(blockStart.Target, out EntityExt targetEntityExt))
+            {
+                throw new Exception($"Can't find entity with the target id {blockStart.Target} in our dictionary!");
+            }
+
+            Debug.Log($"Source {sourceEntityExt.Name} is targeting {targetEntityExt.Name} !!!");
+
+            var heroPowerGen = sourceEntityExt.GameObjectScript.GetComponent<HeroPowerGen>();
+            if (heroPowerGen != null)
+            {
+                heroPowerGen.TargetingAnim(targetEntityExt.GameObjectScript.gameObject);
+            }
+        }
     }
 
     private void UpdateTagChange(PowerHistoryTagChange tagChange)

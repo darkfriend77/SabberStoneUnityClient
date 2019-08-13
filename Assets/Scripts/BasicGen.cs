@@ -15,7 +15,8 @@ public enum AnimationState
     DESTROY,
     HEALTHCHANGE,
     DEAD,
-    DONE
+    DONE,
+    TARGETING
 }
 
 public abstract class BasicGen : MonoBehaviour
