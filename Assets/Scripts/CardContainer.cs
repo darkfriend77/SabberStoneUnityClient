@@ -25,7 +25,6 @@ public class CardContainer : MonoBehaviour
     internal void Add(GameObject entity)
     {
         entity.transform.SetParent(transform, false);
-        entity.transform.SetAsFirstSibling();
         Entities.Add(entity);
     }
 

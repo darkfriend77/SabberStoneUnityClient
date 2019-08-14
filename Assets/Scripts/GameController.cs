@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
-public partial class  GameController : MonoBehaviour
+public partial class GameController : MonoBehaviour
 {
     private Dictionary<int, EntityExt> EntitiesExt = new Dictionary<int, EntityExt>();
 
@@ -68,7 +68,11 @@ public partial class  GameController : MonoBehaviour
 
     public EntityExt MyPlayer => EntitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == PlayerId);
 
-    private Action<int, Game> _gameStepper;
+    private Func<int, Game, bool> _gameStepper;
+
+    private Button _btnStepper;
+
+    public bool DebugFlag = false;
 
     public enum PlayerClientState
     {
@@ -123,10 +127,12 @@ public partial class  GameController : MonoBehaviour
 
         HistoryEntries = new Queue<IPowerHistoryEntry>();
 
+        _btnStepper = boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
 
-        _gameStepper = PaladinVsPriestMoves;
-        _game = new Game(PaladinVsPriest);
-
+        _gameStepper = RogueVsWarlockMoves;
+        _game = new Game(RogueVsWarlock);
+        //_gameStepper = PaladinVsPriestMoves;
+        //_game = new Game(PaladinVsPriest);
         //_gameStepper = MageVsMageMoves;
         //_game = new Game(MageVsMage);
 
@@ -136,10 +142,20 @@ public partial class  GameController : MonoBehaviour
 
     public void OnClickStepByStep()
     {
+        _btnStepper.interactable = false;
+
         _gameStepper(_stepper, _game);
-        _game.PowerHistory.Last.ForEach(p => HistoryEntries.Enqueue(p));
+        _game.PowerHistory.Last.ForEach(p =>
+        {
+            HistoryEntries.Enqueue(p);
+            PowerHistoryText.text = HistoryEntries.Count().ToString();
+        });
+
+        PowerHistoryText.text = HistoryEntries.Count().ToString();
 
         _stepper++;
+
+        _btnStepper.interactable = true;
     }
 
     public void Update()
@@ -170,6 +186,8 @@ public partial class  GameController : MonoBehaviour
                 historyEntry = HistoryEntries.Dequeue();
                 ReadHistoryEntry(historyEntry);
             }
+
+            PowerHistoryText.text = HistoryEntries.Count().ToString();
 
             if (HistoryEntries.Count == 0 && PlayerState == PlayerClientState.Wait)
             {
@@ -250,7 +268,10 @@ public partial class  GameController : MonoBehaviour
 
     private void ReadHistoryEntry(IPowerHistoryEntry historyEntry)
     {
-        //Debug.Log(historyEntry.Print());
+        if (DebugFlag)
+        {
+            Debug.Log(historyEntry.Print());
+        }
 
         switch (historyEntry.PowerType)
         {
@@ -524,6 +545,8 @@ public partial class  GameController : MonoBehaviour
 
     private void DoZoneChange(EntityExt entityExt, Zone prevZone, Zone nextZone)
     {
+        Debug.Log($"{entityExt.Name} from {prevZone} to {nextZone}!");
+
         if (entityExt.CardType == CardType.HERO && nextZone == Zone.PLAY)
         {
             var heroParent = _mainGame.transform.Find(GetParentObject("Hero", entityExt));
@@ -664,6 +687,12 @@ public partial class  GameController : MonoBehaviour
 
                 switch (nextZone)
                 {
+                    case Zone.HAND:
+                        _mainGame.transform.Find(GetParentObject("Board", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
+                        Destroy(entityExt.GameObjectScript.gameObject);
+                        entityExt.GameObjectScript = createCardIn("Hand", CardPrefab, entityExt);
+                        break;
+
                     case Zone.GRAVEYARD:
                         switch (entityExt.CardType)
                         {
@@ -686,6 +715,7 @@ public partial class  GameController : MonoBehaviour
                                 break;
                         }
                         break;
+
                     default:
                         Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                         break;
@@ -794,7 +824,7 @@ public partial class  GameController : MonoBehaviour
         var oldTags = value.Tags;
         if (value.CardId != name)
         {
-            //Debug.Log($"{value.CardId} => {name}");
+            Debug.Log($"{value.CardId} => {name}");
             value.CardId = name;
         }
 
@@ -804,8 +834,15 @@ public partial class  GameController : MonoBehaviour
             {
                 if (oldValue != keyValue.Value)
                 {
-                    //Debug.Log($"[CHANGE_TAG] {keyValue.Key}: {oldValue} => {keyValue.Value}");
-                    oldTags[keyValue.Key] = keyValue.Value;
+                    if (keyValue.Key == GameTag.ZONE || keyValue.Key == GameTag.ZONE_POSITION)
+                    {
+                        Debug.Log($"Ignoring[{value.Name}] => [CHANGE_TAG] {keyValue.Key}: {oldValue} => {keyValue.Value}");
+                    }
+                    else
+                    {
+                        Debug.Log($"[CHANGE_TAG] {keyValue.Key}: {oldValue} => {keyValue.Value}");
+                        oldTags[keyValue.Key] = keyValue.Value;
+                    }
                 }
             }
             else
@@ -826,7 +863,7 @@ public partial class  GameController : MonoBehaviour
             Origin = card != null ? card.Tags : null,
             Id = fullEntity.Entity.Id,
             CardId = fullEntity.Entity.Name,
-            Name = card != null ? card.Name: "missing",
+            Name = card != null ? card.Name : "missing",
             Description = card != null ? card.Text : "missing",
             Tags = fullEntity.Entity.Tags
         };

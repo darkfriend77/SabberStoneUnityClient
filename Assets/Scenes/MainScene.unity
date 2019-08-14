@@ -5495,6 +5495,7 @@ MonoBehaviour:
   PowerOptionsText: {fileID: 80785725}
   PowerChoicesText: {fileID: 548341110}
   PlayerStateText: {fileID: 931688974}
+  DebugFlag: 0
 --- !u!4 &963477646
 Transform:
   m_ObjectHideFlags: 0

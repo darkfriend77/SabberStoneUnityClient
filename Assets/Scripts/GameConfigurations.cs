@@ -1,4 +1,6 @@
-﻿using SabberStoneCore.Config;
+﻿using SabberStoneBasicAI.Nodes;
+using SabberStoneBasicAI.Score;
+using SabberStoneCore.Config;
 using SabberStoneCore.Enums;
 using SabberStoneCore.Kettle;
 using SabberStoneCore.Model;
@@ -13,6 +15,113 @@ using UnityEngine;
 using UnityEngine.UI;
 public partial class GameController
 {
+    private GameConfig RogueVsWarlock => new GameConfig
+    {
+        StartPlayer = 1,
+        FormatType = FormatType.FT_STANDARD,
+        Player1HeroClass = CardClass.ROGUE,
+        Player1Deck = new List<Card>() {
+            Cards.FromName("Sap"),
+            Cards.FromName("Acidic Swamp Ooze"),
+            Cards.FromName("Assassin's Blade"),
+            Cards.FromName("Bloodfen Raptor"),
+            Cards.FromName("Backstab"),
+            Cards.FromName("Backstab"),
+            Cards.FromName("Deadly Poison"),
+            Cards.FromName("Deadly Poison"),
+            Cards.FromName("Shiv"),
+            Cards.FromName("Shiv"),
+            Cards.FromName("Fan of Knives"),
+            Cards.FromName("Fan of Knives"),
+            Cards.FromName("Assassin's Blade"),
+            Cards.FromName("Assassinate"),
+            Cards.FromName("Assassinate"),
+            Cards.FromName("Sprint"),
+            Cards.FromName("Acidic Swamp Ooze"),
+            Cards.FromName("Bloodfen Raptor"),
+            Cards.FromName("Kobold Geomancer"),
+            Cards.FromName("Razorfen Hunter"),
+            Cards.FromName("Shattered Sun Cleric"),
+            Cards.FromName("Shattered Sun Cleric"),
+            Cards.FromName("Chillwind Yeti"),
+            Cards.FromName("Chillwind Yeti"),
+            Cards.FromName("Gnomish Inventor"),
+            Cards.FromName("Gnomish Inventor"),
+            Cards.FromName("Sen'jin Shieldmasta"),
+            Cards.FromName("Sen'jin Shieldmasta"),
+            Cards.FromName("Boulderfist Ogre"),
+            Cards.FromName("Boulderfist Ogre")
+            },
+        Player2HeroClass = CardClass.WARLOCK,
+        Player2Deck = new List<Card>() {
+            Cards.FromName("Voidwalker"),
+            Cards.FromName("Dread Infernal"),
+            Cards.FromName("Corruption"),
+            Cards.FromName("Corruption"),
+            Cards.FromName("Mortal Coil"),
+            Cards.FromName("Mortal Coil"),
+            Cards.FromName("Soulfire"),
+            Cards.FromName("Soulfire"),
+            Cards.FromName("Voidwalker"),
+            Cards.FromName("Felstalker"),
+            Cards.FromName("Felstalker"),
+            Cards.FromName("Drain Life"),
+            Cards.FromName("Drain Life"),
+            Cards.FromName("Shadow Bolt"),
+            Cards.FromName("Shadow Bolt"),
+            Cards.FromName("Hellfire"),
+            Cards.FromName("Hellfire"),
+            Cards.FromName("Dread Infernal"),
+            Cards.FromName("Voodoo Doctor"),
+            Cards.FromName("Voodoo Doctor"),
+            Cards.FromName("Kobold Geomancer"),
+            Cards.FromName("Kobold Geomancer"),
+            Cards.FromName("Ogre Magi"),
+            Cards.FromName("Ogre Magi"),
+            Cards.FromName("Sen'jin Shieldmasta"),
+            Cards.FromName("Sen'jin Shieldmasta"),
+            Cards.FromName("Darkscale Healer"),
+            Cards.FromName("Darkscale Healer"),
+            Cards.FromName("Gurubashi Berserker"),
+            Cards.FromName("Gurubashi Berserker")
+            },
+        SkipMulligan = true,
+        Shuffle = false,
+        FillDecks = false,
+        Logging = true,
+        History = true
+    };
+    private Func<int, Game, bool> RogueVsWarlockMoves = (step, _game) =>
+    {
+        if (step == 0)
+        {
+            _game.StartGame();
+            return true;
+        }
+
+        if (_game.Player1 == _game.CurrentPlayer)
+        {
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new AggroScore(), 10, 500);
+            var solution = new List<PlayerTask>();
+            solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
+            _game.Process(solution.First());
+        }
+        else if (_game.Player2 == _game.CurrentPlayer)
+        {
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new ControlScore(), 10, 500);
+            var solution = new List<PlayerTask>();
+            solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
+            _game.Process(solution.First());
+        }
+        else
+        {
+            Debug.Log("What the fuck is going on!");
+            return false;
+        }
+
+        return true;
+    };
+
     private GameConfig PaladinVsPriest => new GameConfig
     {
         StartPlayer = 1,
@@ -90,7 +199,7 @@ public partial class GameController
         Logging = true,
         History = true
     };
-    private Action<int, Game> PaladinVsPriestMoves = (step, _game) =>
+    private Func<int, Game, bool> PaladinVsPriestMoves = (step, _game) =>
     {
         switch (step)
         {
@@ -160,29 +269,58 @@ public partial class GameController
             // ROUND 6 
             // turn player 1
             case 37: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Stormwind Champion")); break;
-            //case 34: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 35: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            //case 36: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            //case 37: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
-            //// turn player 2
-            //case 38: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
-            //case 39: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Darkscale Healer")); break;
-            //case 40: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            case 38: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 39: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
+            case 40: _game.Process(PlayCardTask.Spell(_game.CurrentPlayer, "Holy Nova")); break;
+            case 41: _game.Process(PlayCardTask.MinionTarget(_game.CurrentPlayer, "Voodoo Doctor", _game.CurrentPlayer.Hero)); break;
+            case 42: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 43: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
+            case 44: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[3], _game.CurrentOpponent.Hero)); break;
+            case 45: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
 
-            //// ROUND 7
-            //// turn player 1
-            //case 41: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2])); break;
-            //case 42: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
-            //case 43: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
-            //case 44: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[2], _game.CurrentOpponent.Hero)); break;
-            //case 45: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Fireball", _game.CurrentOpponent.Hero)); break;
+            // ROUND 7
+            // turn player 1
+            case 46: _game.Process(PlayCardTask.Spell(_game.CurrentPlayer, "Consecration")); break;
+            case 47: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Hammer of Wrath", _game.CurrentOpponent.BoardZone[1])); break;
+            case 48: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 49: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 50: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 51: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.Hero)); break;
+            case 52: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Ironfur Grizzly")); break;
+            case 53: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "River Crocolisk")); break;
+            case 54: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+
+            // ROUND 8
+            // turn player 1
+            case 55: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.BoardZone[1])); break;
+            case 56: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 57: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Guardian of Kings")); break;
+            case 58: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer)); break;
+            case 59: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+            // turn player 2
+            case 60: _game.Process(HeroPowerTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.Hero)); break;
+            case 61: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 62: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
+            case 63: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "Chillwind Yeti")); break;
+            case 64: _game.Process(PlayCardTask.Any(_game.CurrentPlayer, "River Crocolisk")); break;
+            case 65: _game.Process(EndTurnTask.Any(_game.CurrentPlayer)); break;
+
+            // ROUND 9
+            // turn player 1
+            case 66: _game.Process(PlayCardTask.SpellTarget(_game.CurrentPlayer, "Blessing of Kings", _game.CurrentPlayer.BoardZone[0])); break;
+            case 67: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[0], _game.CurrentOpponent.Hero)); break;
+            case 68: _game.Process(MinionAttackTask.Any(_game.CurrentPlayer, _game.CurrentPlayer.BoardZone[1], _game.CurrentOpponent.Hero)); break;
 
             // ENDED
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
-                return;
+                return false;
         }
+
+        return true;
     };
     private GameConfig MageVsMage => new GameConfig
     {
@@ -260,7 +398,7 @@ public partial class GameController
         Logging = true,
         History = true
     };
-    private Action<int, Game> MageVsMageMoves = (step, _game) =>
+    private Func<int, Game, bool> MageVsMageMoves = (step, _game) =>
     {
         switch (step)
         {
@@ -343,7 +481,9 @@ public partial class GameController
 
             default:
                 Debug.Log("Next step is not implemented, please add it!");
-                return;
+                return false;
         }
+
+        return true;
     };
 }
