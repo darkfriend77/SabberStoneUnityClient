@@ -17,7 +17,7 @@ public partial class GameController
 {
     private GameConfig DruidVsWarrior => new GameConfig
     {
-        StartPlayer = 2,
+        StartPlayer = 1,
         FormatType = FormatType.FT_WILD,
         Player1HeroClass = CardClass.DRUID,
         Player1Deck = new List<Card>() {
@@ -52,7 +52,7 @@ public partial class GameController
             Cards.FromName("Ysera"),
             Cards.FromName("Y'Shaarj, Rage Unbound")
             },
-        Player2HeroClass = CardClass.WARLOCK,
+        Player2HeroClass = CardClass.WARRIOR,
         Player2Deck = new List<Card>() {
             Cards.FromName("Upgrade!"),
             Cards.FromName("Upgrade!"),
@@ -86,7 +86,7 @@ public partial class GameController
             Cards.FromName("Zilliax")
             },
         SkipMulligan = false,
-        Shuffle = false,
+        Shuffle = true,
         FillDecks = false,
         Logging = true,
         History = true
@@ -99,21 +99,21 @@ public partial class GameController
             return true;
         }
 
-        if (step == 1)
+        if (step == 1 && _game.Player1.MulliganState == Mulligan.INPUT)
         {
             List<int> mulligan1 = new RampScore().MulliganRule().Invoke(_game.Player1.Choice.Choices.Select(p => _game.IdEntityDic[p]).ToList());
             _game.Process(ChooseTask.Mulligan(_game.Player1, new List<int>()));
             return true;
         }
 
-        if (step == 2)
+        if (step == 2 && _game.Player2.MulliganState == Mulligan.INPUT)
         {
             List<int> mulligan2 = new RampScore().MulliganRule().Invoke(_game.Player2.Choice.Choices.Select(p => _game.IdEntityDic[p]).ToList());
             _game.Process(ChooseTask.Mulligan(_game.Player2, mulligan2));
             return true;
         }
 
-        if (step == 3)
+        if (step == 3 && _game.Player1.MulliganState == Mulligan.DONE && _game.Player2.MulliganState == Mulligan.DONE)
         {
             _game.MainReady();
             return true;
@@ -128,7 +128,7 @@ public partial class GameController
         }
         else if (_game.Player2 == _game.CurrentPlayer)
         {
-            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new ControlScore(), 10, 500);
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new AggroScore(), 10, 500);
             var solution = new List<PlayerTask>();
             solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
             _game.Process(solution.First());

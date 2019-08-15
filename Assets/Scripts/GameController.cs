@@ -136,7 +136,7 @@ public partial class GameController : MonoBehaviour
         HistoryEntries = new Queue<IPowerHistoryEntry>();
 
         _btnStepper = boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
-        
+
         _gameStepper = DruidVsWarriorMoves;
         _game = new Game(DruidVsWarrior);
         //_gameStepper = RogueVsWarlockMoves;
@@ -225,6 +225,7 @@ public partial class GameController : MonoBehaviour
         if (PowerEntityChoices == null)
         {
             _myChoices.gameObject.SetActive(false);
+            _myChoicesPanel.gameObject.GetComponent<CardContainer>().Clear();
             return false;
         }
         else if (PowerEntityChoices.Index >= _currentPowerEntityChoicesIndex)
@@ -238,7 +239,8 @@ public partial class GameController : MonoBehaviour
 
         _myChoices.gameObject.SetActive(true);
 
-        PowerEntityChoices.Entities.ForEach(p => {
+        PowerEntityChoices.Entities.ForEach(p =>
+        {
 
             if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
             {
@@ -247,18 +249,10 @@ public partial class GameController : MonoBehaviour
 
             if (entityExt.CardId != "GAME_005")
             {
-
-                if (entityExt.Zone == Zone.HAND)
-                {
-                    var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
-                    var cardGen = gameObject.GetComponent<CardGen>();
-                    cardGen.Generate(entityExt);
-                    _myChoicesPanel.GetComponent<CardContainer>().Add(gameObject);
-                }
-                else
-                {
-                    throw new Exception($"Entity is not in hand for choices?!");
-                }
+                var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
+                var cardGen = gameObject.GetComponent<CardGen>();
+                cardGen.Generate(entityExt);
+                _myChoicesPanel.GetComponent<CardContainer>().Add(gameObject);
             }
         });
 

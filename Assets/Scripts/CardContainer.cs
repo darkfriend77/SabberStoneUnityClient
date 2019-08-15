@@ -52,4 +52,12 @@ public class CardContainer : MonoBehaviour
             }
         }
     }
+
+    internal void Clear()
+    {
+        Entities.ForEach(p => {
+            Destroy(p);
+        });
+        Entities.Clear();
+    }
 }
