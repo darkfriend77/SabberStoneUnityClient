@@ -60,7 +60,9 @@ public partial class GameController : MonoBehaviour
 
     private Queue<IPowerHistoryEntry> HistoryEntries { get; set; }
 
-    //public PowerChoices PowerChoices { get; private set; }
+    public PowerEntityChoices PowerEntityChoices { get; private set; }
+
+    public int _currentPowerEntityChoicesIndex;
 
     public List<PowerOption> PowerOptionList { get; private set; }
 
@@ -115,6 +117,10 @@ public partial class GameController : MonoBehaviour
         var rootGameObjectList = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
         var boardCanvas = rootGameObjectList.Find(p => p.name == "BoardCanvas");
         _mainGame = boardCanvas.transform.Find("MainGame");
+
+        //_mainGame.transform.Find("MyHand").gameObject.SetActive(false);
+        //_mainGame.transform.Find("OpHand").gameObject.SetActive(false);
+
         _myChoices = _mainGame.transform.Find("MyChoices");
         _myChoicesPanel = _myChoices.transform.Find("MyChoicesPanel");
         _myChoices.gameObject.SetActive(false);
@@ -125,12 +131,16 @@ public partial class GameController : MonoBehaviour
 
         _stepper = 0;
 
+        _currentPowerEntityChoicesIndex = int.MaxValue;
+
         HistoryEntries = new Queue<IPowerHistoryEntry>();
 
         _btnStepper = boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
-
-        _gameStepper = RogueVsWarlockMoves;
-        _game = new Game(RogueVsWarlock);
+        
+        _gameStepper = DruidVsWarriorMoves;
+        _game = new Game(DruidVsWarrior);
+        //_gameStepper = RogueVsWarlockMoves;
+        //_game = new Game(RogueVsWarlock);
         //_gameStepper = PaladinVsPriestMoves;
         //_game = new Game(PaladinVsPriest);
         //_gameStepper = MageVsMageMoves;
@@ -150,8 +160,9 @@ public partial class GameController : MonoBehaviour
             HistoryEntries.Enqueue(p);
             PowerHistoryText.text = HistoryEntries.Count().ToString();
         });
-
         PowerHistoryText.text = HistoryEntries.Count().ToString();
+
+        PowerEntityChoices = PowerChoicesBuilder.EntityChoices(_game, _game.Player1.Choice);
 
         _stepper++;
 
@@ -211,52 +222,71 @@ public partial class GameController : MonoBehaviour
 
     public bool ReadPowerChoices()
     {
-        //if (PowerChoices == null)
-        //{
-        //    _myChoices.gameObject.SetActive(false);
-        //    return false;
-        //}
+        if (PowerEntityChoices == null)
+        {
+            _myChoices.gameObject.SetActive(false);
+            return false;
+        }
+        else if (PowerEntityChoices.Index >= _currentPowerEntityChoicesIndex)
+        {
+            return false;
+        }
 
-        //Debug.Log($"Current PowerChoices: {PowerChoices.ChoiceType} with {PowerChoices.Entities.Count} entities");
+        Debug.Log($"Current PowerChoices: {PowerEntityChoices.ChoiceType} with {PowerEntityChoices.Entities.Count} entities, {PowerEntityChoices.Index}");
 
-        //PowerChoicesText.text = $"{PowerChoices.Entities.Count}{PowerChoices.ChoiceType.ToString().Substring(0, 1)}";
+        PowerChoicesText.text = PowerEntityChoices != null ? "1" : "0";
 
-        //_myChoices.gameObject.SetActive(true);
+        _myChoices.gameObject.SetActive(true);
 
-        //PowerChoices.Entities.ForEach(p => {
+        PowerEntityChoices.Entities.ForEach(p => {
 
-        //    if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
-        //    {
-        //        throw new Exception($"Can't find entity with the id {p} in our dictionary!");
-        //    }
+            if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
+            {
+                throw new Exception($"Can't find entity with the id {p} in our dictionary!");
+            }
 
-        //    createCardIn(_myChoicesPanel, CardPrefab, entityExt);
-        //});
+            if (entityExt.CardId != "GAME_005")
+            {
 
+                if (entityExt.Zone == Zone.HAND)
+                {
+                    var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
+                    var cardGen = gameObject.GetComponent<CardGen>();
+                    cardGen.Generate(entityExt);
+                    _myChoicesPanel.GetComponent<CardContainer>().Add(gameObject);
+                }
+                else
+                {
+                    throw new Exception($"Entity is not in hand for choices?!");
+                }
+            }
+        });
+
+        _currentPowerEntityChoicesIndex = PowerEntityChoices.Index;
         return true;
     }
 
     //public void ReadPowerOptions(List<PowerOption> powerOptions)
     public bool ReadPowerOptions()
     {
-        if (PowerOptionList.Count() == 0)
-        {
-            _endTurnButton.interactable = false;
-            return false;
-        }
+        //if (PowerOptionList.Count() == 0)
+        //{
+        //    _endTurnButton.interactable = false;
+        //    return false;
+        //}
 
-        //Debug.Log($"Current PowerOptions: {PowerOptionList.Count()}");
+        ////Debug.Log($"Current PowerOptions: {PowerOptionList.Count()}");
 
-        PowerOptionsText.text = PowerOptionList.Count().ToString();
+        //PowerOptionsText.text = PowerOptionList.Count().ToString();
 
-        var endTurnOption = PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
-        _endTurnButton.interactable = endTurnOption != null;
+        //var endTurnOption = PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
+        //_endTurnButton.interactable = endTurnOption != null;
 
-        // display the other power options ...
-        foreach (var powerOption in PowerOptionList)
-        {
+        //// display the other power options ...
+        //foreach (var powerOption in PowerOptionList)
+        //{
 
-        }
+        //}
 
         return true;
     }
@@ -355,7 +385,7 @@ public partial class GameController : MonoBehaviour
 
     private void UpdateMetaData(PowerHistoryMetaData metaData)
     {
-        //Debug.Log($"{metaData.Print()}");
+        Debug.Log($"{metaData.Print()}");
     }
 
     private void UpdateBlockEnd(PowerHistoryBlockEnd blockEnd)
@@ -364,7 +394,7 @@ public partial class GameController : MonoBehaviour
 
     private void UpdateBlockStart(PowerHistoryBlockStart blockStart)
     {
-        //Debug.Log(blockStart.Print());
+        Debug.Log(blockStart.Print());
         if (blockStart.BlockType == BlockType.PLAY && blockStart.Target != 0)
         {
             if (!EntitiesExt.TryGetValue(blockStart.Source, out EntityExt sourceEntityExt))
@@ -413,6 +443,14 @@ public partial class GameController : MonoBehaviour
 
         switch (tagChange.Tag)
         {
+            case GameTag.NEXT_STEP:
+                if ((Step)tagChange.Value == Step.MAIN_BEGIN)
+                {
+                    _mainGame.transform.Find("MyHand").gameObject.SetActive(true);
+                    _mainGame.transform.Find("OpHand").gameObject.SetActive(true);
+                }
+                break;
+
             case GameTag.MULLIGAN_STATE:
                 Debug.Log($"MULLIGAN_STATE = {(Mulligan)tagChange.Value}");
                 break;
@@ -638,6 +676,11 @@ public partial class GameController : MonoBehaviour
                 _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
                 switch (nextZone)
                 {
+                    case Zone.DECK:
+                        // MULLIGAN
+                        entityExt.GameObjectScript.gameObject.GetComponent<CardGen>().Show(false);
+                        _mainGame.transform.Find(GetParentObject("Deck", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
+                        break;
                     case Zone.GRAVEYARD:
                         // DISCARD
                         entityExt.GameObjectScript.gameObject.GetComponent<CardGen>().DestroyAnim();
@@ -729,6 +772,18 @@ public partial class GameController : MonoBehaviour
             case Zone.GRAVEYARD:
             case Zone.REMOVEDFROMGAME:
             case Zone.SETASIDE:
+                switch (nextZone)
+                {
+                    case Zone.HAND:
+                        // Cards generated by spells
+                        entityExt.GameObjectScript = createCardIn("Hand", CardPrefab, entityExt);
+                        break;
+
+                    default:
+                        Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
+                        break;
+                }
+                break;
             case Zone.SECRET:
             default:
                 Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
@@ -828,7 +883,7 @@ public partial class GameController : MonoBehaviour
         var oldTags = value.Tags;
         if (value.CardId != name)
         {
-            Debug.Log($"{value.CardId} => {name}");
+            //Debug.Log($"{value.CardId} => {name}");
             value.CardId = name;
         }
 

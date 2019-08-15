@@ -17,76 +17,130 @@ public partial class GameController
 {
     private GameConfig DruidVsWarrior => new GameConfig
     {
-        StartPlayer = 1,
-        FormatType = FormatType.FT_STANDARD,
+        StartPlayer = 2,
+        FormatType = FormatType.FT_WILD,
         Player1HeroClass = CardClass.DRUID,
         Player1Deck = new List<Card>() {
             Cards.FromName("Innervate"),
             Cards.FromName("Innervate"),
-            Cards.FromName("Claw"),
-            Cards.FromName("Claw"),
-            Cards.FromName("Mark of the Wild"),
-            Cards.FromName("Mark of the Wild"),
+            Cards.FromName("Living Roots"),
+            Cards.FromName("Living Roots"),
+            Cards.FromName("Raven Idol"),
+            Cards.FromName("Raven Idol"),
+            Cards.FromName("Wrath"),
+            Cards.FromName("Wrath"),
+            Cards.FromName("Feral Rage"),
+            Cards.FromName("Mulch"),
+            Cards.FromName("Wild Growth"),
+            Cards.FromName("Wild Growth"),
+            Cards.FromName("Fandral Staghelm"),
+            Cards.FromName("Mire Keeper"),
+            Cards.FromName("Mire Keeper"),
             Cards.FromName("Swipe"),
             Cards.FromName("Swipe"),
-            Cards.FromName("Starfire"),
-            Cards.FromName("Starfire"),
-            Cards.FromName("Ironbark Protector"),
-            Cards.FromName("Acidic Swamp Ooze"),
-            Cards.FromName("River Crocolisk"),
-            Cards.FromName("River Crocolisk"),
-            Cards.FromName("Shattered Sun Cleric"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx"),
-            Cards.FromName("xxxxxxxxxx")
+            Cards.FromName("Moonglade Portal"),
+            Cards.FromName("Moonglade Portal"),
+            Cards.FromName("Nourish"),
+            Cards.FromName("Nourish"),
+            Cards.FromName("Aviana"),
+            Cards.FromName("Barnes"),
+            Cards.FromName("Emperor Thaurissan"),
+            Cards.FromName("Bog Creeper"),
+            Cards.FromName("Kel'Thuzad"),
+            Cards.FromName("Ragnaros the Firelord"),
+            Cards.FromName("The Lich King"),
+            Cards.FromName("Ysera"),
+            Cards.FromName("Y'Shaarj, Rage Unbound")
             },
         Player2HeroClass = CardClass.WARLOCK,
         Player2Deck = new List<Card>() {
-            Cards.FromName("Voidwalker"),
-            Cards.FromName("Dread Infernal"),
-            Cards.FromName("Corruption"),
-            Cards.FromName("Corruption"),
-            Cards.FromName("Mortal Coil"),
-            Cards.FromName("Mortal Coil"),
-            Cards.FromName("Soulfire"),
-            Cards.FromName("Soulfire"),
-            Cards.FromName("Voidwalker"),
-            Cards.FromName("Felstalker"),
-            Cards.FromName("Felstalker"),
-            Cards.FromName("Drain Life"),
-            Cards.FromName("Drain Life"),
-            Cards.FromName("Shadow Bolt"),
-            Cards.FromName("Shadow Bolt"),
-            Cards.FromName("Hellfire"),
-            Cards.FromName("Hellfire"),
-            Cards.FromName("Dread Infernal"),
-            Cards.FromName("Voodoo Doctor"),
-            Cards.FromName("Voodoo Doctor"),
-            Cards.FromName("Kobold Geomancer"),
-            Cards.FromName("Kobold Geomancer"),
-            Cards.FromName("Ogre Magi"),
-            Cards.FromName("Ogre Magi"),
-            Cards.FromName("Sen'jin Shieldmasta"),
-            Cards.FromName("Sen'jin Shieldmasta"),
-            Cards.FromName("Darkscale Healer"),
-            Cards.FromName("Darkscale Healer"),
-            Cards.FromName("Gurubashi Berserker"),
-            Cards.FromName("Gurubashi Berserker")
+            Cards.FromName("Upgrade!"),
+            Cards.FromName("Upgrade!"),
+            Cards.FromName("Heroic Strike"),
+            Cards.FromName("Heroic Strike"),
+            Cards.FromName("Woodcutter's Axe"),
+            Cards.FromName("Woodcutter's Axe"),
+            Cards.FromName("Frothing Berserker"),
+            Cards.FromName("Frothing Berserker"),
+            Cards.FromName("Kor'kron Elite"),
+            Cards.FromName("Kor'kron Elite"),
+            Cards.FromName("Mortal Strike"),
+            Cards.FromName("Mortal Strike"),
+            Cards.FromName("Arcanite Reaper"),
+            Cards.FromName("Arcanite Reaper"),
+            Cards.FromName("Sul'thraze"),
+            Cards.FromName("Bloodsail Corsair"),
+            Cards.FromName("Bloodsail Corsair"),
+            Cards.FromName("Southsea Deckhand"),
+            Cards.FromName("Southsea Deckhand"),
+            Cards.FromName("Hench-Clan Thug"),
+            Cards.FromName("Hench-Clan Thug"),
+            Cards.FromName("Nightmare Amalgam"),
+            Cards.FromName("Nightmare Amalgam"),
+            Cards.FromName("Southsea Captain"),
+            Cards.FromName("Southsea Captain"),
+            Cards.FromName("Dread Corsair"),
+            Cards.FromName("Dread Corsair"),
+            Cards.FromName("Captain Greenskin"),
+            Cards.FromName("Leeroy Jenkins"),
+            Cards.FromName("Zilliax")
             },
-        SkipMulligan = true,
+        SkipMulligan = false,
         Shuffle = false,
         FillDecks = false,
         Logging = true,
         History = true
     };
+    private Func<int, Game, bool> DruidVsWarriorMoves = (step, _game) =>
+    {
+        if (step == 0)
+        {
+            _game.StartGame();
+            return true;
+        }
 
+        if (step == 1)
+        {
+            List<int> mulligan1 = new RampScore().MulliganRule().Invoke(_game.Player1.Choice.Choices.Select(p => _game.IdEntityDic[p]).ToList());
+            _game.Process(ChooseTask.Mulligan(_game.Player1, new List<int>()));
+            return true;
+        }
+
+        if (step == 2)
+        {
+            List<int> mulligan2 = new RampScore().MulliganRule().Invoke(_game.Player2.Choice.Choices.Select(p => _game.IdEntityDic[p]).ToList());
+            _game.Process(ChooseTask.Mulligan(_game.Player2, mulligan2));
+            return true;
+        }
+
+        if (step == 3)
+        {
+            _game.MainReady();
+            return true;
+        }
+
+        if (_game.Player1 == _game.CurrentPlayer)
+        {
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new RampScore(), 10, 500);
+            var solution = new List<PlayerTask>();
+            solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
+            _game.Process(solution.First());
+        }
+        else if (_game.Player2 == _game.CurrentPlayer)
+        {
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new ControlScore(), 10, 500);
+            var solution = new List<PlayerTask>();
+            solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
+            _game.Process(solution.First());
+        }
+        else
+        {
+            Debug.Log("What the fuck is going on!");
+            return false;
+        }
+
+        return true;
+    };
     private GameConfig RogueVsWarlock => new GameConfig
     {
         StartPlayer = 1,
