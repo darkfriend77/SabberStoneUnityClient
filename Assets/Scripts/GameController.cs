@@ -638,6 +638,10 @@ public partial class GameController : MonoBehaviour
                 _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
                 switch (nextZone)
                 {
+                    case Zone.GRAVEYARD:
+                        // DISCARD
+                        entityExt.GameObjectScript.gameObject.GetComponent<CardGen>().DestroyAnim();
+                        break;
 
                     case Zone.PLAY:
                         _mainGame.transform.Find(GetParentObject("Play", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
