@@ -32,6 +32,8 @@ public class CardGen : AnimationGen
         var attack = frame.Find("Attack");
         var health = frame.Find("Health");
 
+        var originCost = entity.Origin.ContainsKey(GameTag.COST) ? entity.Origin[GameTag.COST] : 0;
+
         switch (cardType)
         {
             case CardType.INVALID:
@@ -41,16 +43,20 @@ public class CardGen : AnimationGen
             case CardType.PLAYER:
                 break;
             case CardType.HERO:
+                mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.HEALTH].ToString();
                 attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
                 break;
             case CardType.MINION:
                 mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.HEALTH].ToString();
                 attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
                 break;
             case CardType.SPELL:
                 mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.gameObject.SetActive(false);
                 attack.gameObject.SetActive(false);
                 break;
@@ -58,6 +64,7 @@ public class CardGen : AnimationGen
                 break;
             case CardType.WEAPON:
                 mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.DURABILITY].ToString();
                 attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
                 break;

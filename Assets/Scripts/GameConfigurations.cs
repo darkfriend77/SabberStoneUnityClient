@@ -89,7 +89,8 @@ public partial class GameController
         Shuffle = true,
         FillDecks = false,
         Logging = true,
-        History = true
+        History = true,
+        RandomSeed = 1111
     };
     private Func<int, Game, bool> DruidVsWarriorMoves = (step, _game) =>
     {
@@ -121,14 +122,14 @@ public partial class GameController
 
         if (_game.Player1 == _game.CurrentPlayer)
         {
-            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new RampScore(), 10, 500);
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new RampScore(), 5, 200);
             var solution = new List<PlayerTask>();
             solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
             _game.Process(solution.First());
         }
         else if (_game.Player2 == _game.CurrentPlayer)
         {
-            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new AggroScore(), 10, 500);
+            List<OptionNode> solutions = OptionNode.GetSolutions(_game, _game.CurrentPlayer.Id, new AggroScore(), 5, 200);
             var solution = new List<PlayerTask>();
             solutions.OrderByDescending(p => p.Score).First().PlayerTasks(ref solution);
             _game.Process(solution.First());

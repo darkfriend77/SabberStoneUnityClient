@@ -654,12 +654,24 @@ public partial class GameController : MonoBehaviour
 
             case Zone.DECK:
                 _mainGame.transform.Find(GetParentObject("Deck", entityExt)).GetComponent<CardContainer>().Remove(entityExt.GameObjectScript.gameObject);
+
                 switch (nextZone)
                 {
                     case Zone.HAND:
                         _mainGame.transform.Find(GetParentObject("Hand", entityExt)).GetComponent<CardContainer>().Add(entityExt.GameObjectScript.gameObject);
                         break;
+                    case Zone.PLAY:
+                        switch (entityExt.CardType)
+                        {
+                            case CardType.MINION:
+                                CreateMinion(ref entityExt);
+                                break;
 
+                            default:
+                                Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
+                                break;
+                        }
+                        break;
                     default:
                         Debug.Log($"Not implemented! {entityExt.Name} - {prevZone} => {nextZone}, for {entityExt.CardType}!");
                         break;
@@ -690,26 +702,11 @@ public partial class GameController : MonoBehaviour
                         switch (entityExt.CardType)
                         {
                             case CardType.MINION:
-
-                                gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
-                                minionGen = gameObject.GetComponent<MinionGen>();
-                                minionGen.Generate(entityExt);
-                                entityExt.GameObjectScript = minionGen;
-
-                                _mainGame.transform.Find(GetParentObject("Board", entityExt)).GetComponent<CardContainer>().Add(gameObject);
-                                break;
-
-                            case CardType.SPELL:
-
+                                CreateMinion(ref entityExt);
                                 break;
 
                             case CardType.WEAPON:
-
-                                var heroWeaponParent = _mainGame.transform.Find(GetParentObject("HeroWeapon", entityExt));
-                                gameObject = Instantiate(HeroWeaponPrefab, heroWeaponParent.transform).gameObject;
-                                heroWeaponGen = gameObject.GetComponent<HeroWeaponGen>();
-                                heroWeaponGen.Generate(entityExt);
-                                entityExt.GameObjectScript = heroWeaponGen;
+                                CreateWeapon(ref entityExt);
                                 break;
 
                             default:
@@ -744,7 +741,8 @@ public partial class GameController : MonoBehaviour
                                 break;
 
                             case CardType.WEAPON:
-                                Destroy(entityExt.GameObjectScript.gameObject);
+                                entityExt.GameObjectScript.gameObject.GetComponent<HeroWeaponGen>().DestroyAnim();
+                                //Destroy(entityExt.GameObjectScript.gameObject);
                                 break;
 
                             case CardType.SPELL:
@@ -784,6 +782,25 @@ public partial class GameController : MonoBehaviour
                 break;
         }
 
+    }
+
+    private void CreateWeapon(ref EntityExt entityExt)
+    {
+        var heroWeaponParent = _mainGame.transform.Find(GetParentObject("HeroWeapon", entityExt));
+        var gameObject = Instantiate(HeroWeaponPrefab, heroWeaponParent.transform).gameObject;
+        var heroWeaponGen = gameObject.GetComponent<HeroWeaponGen>();
+        heroWeaponGen.Generate(entityExt);
+        entityExt.GameObjectScript = heroWeaponGen;
+    }
+
+    private void CreateMinion(ref EntityExt entityExt)
+    {
+        var gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
+        var minionGen = gameObject.GetComponent<MinionGen>();
+        minionGen.Generate(entityExt);
+        entityExt.GameObjectScript = minionGen;
+
+        _mainGame.transform.Find(GetParentObject("Board", entityExt)).GetComponent<CardContainer>().Add(gameObject);
     }
 
     private void DoZonePositionChange(EntityExt entityExt)
