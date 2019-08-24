@@ -15,7 +15,7 @@ using UnityEngine;
 using UnityEngine.UI;
 public partial class GameController
 {
-    private GameConfig DruidVsWarrior => new GameConfig
+    private GameConfig DruidVsWarrior(long seed) => new GameConfig
     {
         StartPlayer = 1,
         FormatType = FormatType.FT_WILD,
@@ -90,7 +90,7 @@ public partial class GameController
         FillDecks = false,
         Logging = true,
         History = true,
-        RandomSeed = 1111
+        RandomSeed = seed
     };
     private Func<int, Game, bool> DruidVsWarriorMoves = (step, _game) =>
     {
@@ -142,7 +142,7 @@ public partial class GameController
 
         return true;
     };
-    private GameConfig RogueVsWarlock => new GameConfig
+    private GameConfig RogueVsWarlock(long seed) => new GameConfig
     {
         StartPlayer = 1,
         FormatType = FormatType.FT_STANDARD,
@@ -216,7 +216,8 @@ public partial class GameController
         Shuffle = false,
         FillDecks = false,
         Logging = true,
-        History = true
+        History = true,
+        RandomSeed = seed
     };
     private Func<int, Game, bool> RogueVsWarlockMoves = (step, _game) =>
     {
@@ -249,7 +250,7 @@ public partial class GameController
         return true;
     };
 
-    private GameConfig PaladinVsPriest => new GameConfig
+    private GameConfig PaladinVsPriest(long seed) => new GameConfig
     {
         StartPlayer = 1,
         FormatType = FormatType.FT_STANDARD,
@@ -324,7 +325,8 @@ public partial class GameController
         Shuffle = false,
         FillDecks = false,
         Logging = true,
-        History = true
+        History = true,
+        RandomSeed = seed
     };
     private Func<int, Game, bool> PaladinVsPriestMoves = (step, _game) =>
     {
@@ -449,7 +451,7 @@ public partial class GameController
 
         return true;
     };
-    private GameConfig MageVsMage => new GameConfig
+    private GameConfig MageVsMage(long seed) => new GameConfig
     {
         StartPlayer = 1,
         FormatType = FormatType.FT_STANDARD,
@@ -523,7 +525,8 @@ public partial class GameController
         Shuffle = false,
         FillDecks = false,
         Logging = true,
-        History = true
+        History = true,
+        RandomSeed = seed
     };
     private Func<int, Game, bool> MageVsMageMoves = (step, _game) =>
     {

@@ -76,6 +76,8 @@ public partial class GameController : MonoBehaviour
 
     public bool DebugFlag = false;
 
+    public long Seed = 1111;
+
     public enum PlayerClientState
     {
         None,
@@ -138,13 +140,13 @@ public partial class GameController : MonoBehaviour
         _btnStepper = boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
 
         _gameStepper = DruidVsWarriorMoves;
-        _game = new Game(DruidVsWarrior);
+        _game = new Game(DruidVsWarrior(Seed));
         //_gameStepper = RogueVsWarlockMoves;
-        //_game = new Game(RogueVsWarlock);
+        //_game = new Game(RogueVsWarlock(Seed));
         //_gameStepper = PaladinVsPriestMoves;
-        //_game = new Game(PaladinVsPriest);
+        //_game = new Game(PaladinVsPriest(Seed));
         //_gameStepper = MageVsMageMoves;
-        //_game = new Game(MageVsMage);
+        //_game = new Game(MageVsMage(Seed));
 
         _playerId = 1;
         Debug.Log($"Watched playeyrId = {_playerId}!");
