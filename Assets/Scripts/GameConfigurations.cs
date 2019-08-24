@@ -13,7 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-public partial class GameController
+public partial class PowerInterpreter
 {
     private GameConfig DruidVsWarrior(long seed) => new GameConfig
     {
