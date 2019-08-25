@@ -1,9 +1,11 @@
-﻿using SabberStoneCore.Config;
+﻿using SabberStoneContract.Model;
+using SabberStoneCore.Config;
 using SabberStoneCore.Enums;
 using SabberStoneCore.Kettle;
 using SabberStoneCore.Model;
 using SabberStoneCore.Tasks.PlayerTasks;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -38,7 +40,10 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private int _playerId;
 
-    public int PlayerId => _playerId;
+    public void SetPlayerId(int playerId)
+    {
+        _playerId = playerId;
+    }
 
     private Button _endTurnButton;
 
@@ -48,17 +53,34 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private int _stepper;
 
-    private Queue<IPowerHistoryEntry> HistoryEntries { get; set; }
+    private ConcurrentQueue<IPowerHistoryEntry> _historyEntries;
 
-    public PowerEntityChoices PowerEntityChoices { get; private set; }
+    public void AddHistoryEntry(IPowerHistoryEntry historyEntry)
+    {
+        _historyEntries.Enqueue(historyEntry);
+    }
 
-    public int _currentPowerEntityChoicesIndex;
+    private PowerEntityChoices _powerEntityChoices;
 
-    public List<PowerOption> PowerOptionList { get; private set; }
+    public void AddPowerEntityChoices(PowerEntityChoices entityChoices)
+    {
+        _powerEntityChoices = entityChoices;
+    }
+
+    private int _currentPowerEntityChoicesIndex;
+
+    private PowerOptions _powerOptions;
+
+    public void AddPowerOptions(PowerOptions powerOptions)
+    {
+        _powerOptions = powerOptions;
+    }
+
+    private int _currentPowerOptionsIndex;
 
     public Text PowerHistoryText, PowerOptionsText, PowerChoicesText, PlayerStateText;
 
-    public EntityExt MyPlayer => EntitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == PlayerId);
+    public EntityExt MyPlayer => EntitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == _playerId);
 
     private Func<int, Game, bool> _gameStepper;
 
@@ -107,7 +129,7 @@ public partial class PowerInterpreter : MonoBehaviour
         var rootGameObjectList = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
         var menuCanvas = rootGameObjectList.Find(p => p.name == "MenuCanvas");
 
-         var boardCanvas = rootGameObjectList.Find(p => p.name == "BoardCanvas");
+        var boardCanvas = rootGameObjectList.Find(p => p.name == "BoardCanvas");
         _mainGame = boardCanvas.transform.Find("MainGame");
 
         //_mainGame.transform.Find("MyHand").gameObject.SetActive(false);
@@ -120,8 +142,9 @@ public partial class PowerInterpreter : MonoBehaviour
         _endTurnButton.interactable = false;
 
         _currentPowerEntityChoicesIndex = int.MaxValue;
+        _currentPowerOptionsIndex = int.MaxValue;
 
-        HistoryEntries = new Queue<IPowerHistoryEntry>();
+        _historyEntries = new ConcurrentQueue<IPowerHistoryEntry>();
 
         _btnStepper = boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
 
@@ -129,7 +152,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public void InitializeDebug()
     {
-        _playerId = 1;
+        SetPlayerId(1);
         _game = new Game(DruidVsWarrior(Seed));
         _gameStepper = DruidVsWarriorMoves;
     }
@@ -147,12 +170,19 @@ public partial class PowerInterpreter : MonoBehaviour
         _gameStepper(_stepper, _game);
         _game.PowerHistory.Last.ForEach(p =>
         {
-            HistoryEntries.Enqueue(p);
-            PowerHistoryText.text = HistoryEntries.Count().ToString();
+            _historyEntries.Enqueue(p);
+            PowerHistoryText.text = _historyEntries.Count().ToString();
         });
-        PowerHistoryText.text = HistoryEntries.Count().ToString();
+        PowerHistoryText.text = _historyEntries.Count().ToString();
 
-        PowerEntityChoices = PowerChoicesBuilder.EntityChoices(_game, _game.Player1.Choice);
+        _powerEntityChoices = PowerChoicesBuilder.EntityChoices(_game, _game.Player1.Choice);
+
+        var powerOptions = PowerOptionsBuilder.AllOptions(_game, _game.Player1.Options());
+        _powerOptions = new PowerOptions()
+        {
+            Index = powerOptions.Index,
+            PowerOptionList = powerOptions.PowerOptionList
+        };
 
         _stepper++;
 
@@ -175,29 +205,30 @@ public partial class PowerInterpreter : MonoBehaviour
         if (AllAnimStatesAreNone)
         {
 
-            if (HistoryEntries.Count > 0)
+            if (!_historyEntries.IsEmpty)
             {
                 PlayerState = PlayerClientState.Wait;
-                ReadHistoryEntry(HistoryEntries.Dequeue());
+
+                if (_historyEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
+                {
+                    ReadHistoryEntry(historyEntry);
+
+                    PowerHistoryText.text = _historyEntries.Count().ToString();
+                }
+
+                PlayerState = PlayerClientState.Wait;
+                PowerChoicesText.text = "0";
+                PowerOptionsText.text = "0";
             }
-
-            PowerHistoryText.text = HistoryEntries.Count().ToString();
-
-            if (HistoryEntries.Count == 0 && PlayerState == PlayerClientState.Wait)
+            else
             {
-                if (ReadPowerChoices())
+                if (PlayerState != PlayerClientState.Choice && ReadPowerChoices())
                 {
                     PlayerState = PlayerClientState.Choice;
                 }
-                else if (ReadPowerOptions())
+                else if (PlayerState != PlayerClientState.Option && ReadPowerOptions())
                 {
                     PlayerState = PlayerClientState.Option;
-                }
-                else
-                {
-                    PlayerState = PlayerClientState.Wait;
-                    PowerChoicesText.text = "0";
-                    PowerOptionsText.text = "0";
                 }
             }
         }
@@ -205,24 +236,24 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public bool ReadPowerChoices()
     {
-        if (PowerEntityChoices == null)
+        if (_powerEntityChoices == null || _powerEntityChoices.Entities == null || _powerEntityChoices.Entities.Count == 0)
         {
             _myChoices.gameObject.SetActive(false);
             _myChoicesPanel.gameObject.GetComponent<CardContainer>().Clear();
             return false;
         }
-        else if (PowerEntityChoices.Index >= _currentPowerEntityChoicesIndex)
-        {
-            return false;
-        }
+        //else if (_powerEntityChoices.Index <= _currentPowerEntityChoicesIndex)
+        //{
+        //    return false;
+        //}
 
-        Debug.Log($"Current PowerChoices: {PowerEntityChoices.ChoiceType} with {PowerEntityChoices.Entities.Count} entities, {PowerEntityChoices.Index}");
+        Debug.Log($"Current PowerChoices: {_powerEntityChoices.ChoiceType} with {_powerEntityChoices.Entities.Count} entities, {_powerEntityChoices.Index}");
 
-        PowerChoicesText.text = PowerEntityChoices != null ? "1" : "0";
+        PowerChoicesText.text = _powerEntityChoices != null ? "1" : "0";
 
         _myChoices.gameObject.SetActive(true);
 
-        PowerEntityChoices.Entities.ForEach(p =>
+        _powerEntityChoices.Entities.ForEach(p =>
         {
 
             if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
@@ -239,22 +270,24 @@ public partial class PowerInterpreter : MonoBehaviour
             }
         });
 
-        _currentPowerEntityChoicesIndex = PowerEntityChoices.Index;
+        _currentPowerEntityChoicesIndex = _powerEntityChoices.Index;
         return true;
     }
 
     //public void ReadPowerOptions(List<PowerOption> powerOptions)
     public bool ReadPowerOptions()
     {
-        //if (PowerOptionList.Count() == 0)
+        if (_powerOptions == null || _powerOptions.PowerOptionList == null || _powerOptions.PowerOptionList.Count == 0)
+        {
+            _endTurnButton.interactable = false;
+            return false;
+        }
+        //else if (_powerOptions.Index <= _currentPowerOptionsIndex)
         //{
-        //    _endTurnButton.interactable = false;
         //    return false;
         //}
 
-        ////Debug.Log($"Current PowerOptions: {PowerOptionList.Count()}");
-
-        //PowerOptionsText.text = PowerOptionList.Count().ToString();
+        PowerOptionsText.text = _powerOptions.PowerOptionList.Count.ToString();
 
         //var endTurnOption = PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
         //_endTurnButton.interactable = endTurnOption != null;
@@ -265,6 +298,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
         //}
 
+        _currentPowerOptionsIndex = _powerOptions.Index;
         return true;
     }
 
@@ -826,7 +860,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private string GetParentObject(string parentObjectName, int playerId)
     {
-        if (PlayerId == playerId)
+        if (_playerId == playerId)
         {
             return $"My{parentObjectName}";
         }

@@ -27,5 +27,9 @@ public class UnityGameClient : GameClient
         }
     }
 
+    public override void CallInvitation()
+    {
+        _controller.ProccessInvitation();
+    }
 }
 

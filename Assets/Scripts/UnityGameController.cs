@@ -9,27 +9,39 @@ using System.Threading.Tasks;
 
 public class UnityGameController : GameController
 {
-    public UnityGameController(IGameAI gameAi) : base(gameAi)
-    {
+    private UnityController _controller;
 
+    public UnityGameController(UnityController controller, IGameAI gameAi) : base(gameAi)
+    {
+        _controller = controller;
     }
 
     public override void CallInitialisation()
     {
-        base.CallInitialisation();
+        _controller.ProccessInitialisation();
     }
 
     public override void CallPowerHistory()
     {
-        base.CallPowerHistory();
+        _controller.ProccessPowerHistory();
     }
 
     public override void CallPowerChoices()
     {
-        base.CallPowerChoices();
+        _controller.ProccessPowerChoices();
     }
 
     public override void CallPowerOptions()
+    {
+        _controller.ProccessPowerOptions();
+    }
+
+    public void SendBasePowerChoices()
+    {
+        base.CallPowerChoices();
+    }
+
+    public void SendBasePowerOptions()
     {
         base.CallPowerOptions();
     }

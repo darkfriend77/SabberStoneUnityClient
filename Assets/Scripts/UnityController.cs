@@ -1,5 +1,6 @@
 ﻿using SabberStoneContract.Core;
 using SabberStoneContract.Interface;
+using SabberStoneCore.Kettle;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,6 +31,8 @@ public class UnityController : MonoBehaviour
     private UnityGameController _gameController;
 
     private UnityGameClient _gameClient;
+
+    private bool _newClientState;
 
     // Start is called before the first frame update
     void Start()
@@ -64,31 +67,11 @@ public class UnityController : MonoBehaviour
         _board.SetActive(false);
         _boardCanvas.SetActive(false);
 
-        _gameController = new UnityGameController(new RandomAI());
+        _gameController = new UnityGameController(this, new RandomAI());
         _gameClient = new UnityGameClient(this, "127.0.0.1", 50051, _gameController);
 
         // initial mocked state
         ProccessGameClientState(GameClientState.None, GameClientState.None);
-    }
-
-    internal void ProccessGameClientState(GameClientState oldState, GameClientState newState)
-    {
-        _clientStateText.text = newState.ToString();
-        _connectButtonText.text = newState == GameClientState.None ? "CONNECT" : "DISCONNECT";
-        _connectButtonText.color = newState == GameClientState.None ? new Color(0.195f, 0.195f, 0.195f) : Color.white;
-        _connectButtonImage.color = newState == GameClientState.None ? Color.white : Color.gray;
-
-        _menuCanvas.SetActive(newState != GameClientState.InGame);
-
-        _queuedTime = newState == GameClientState.Queued ? Time.time : 0;
-        _userWelcomeGrid.SetActive(newState == GameClientState.None);
-        _userAccountGrid.SetActive(newState == GameClientState.Connected);
-        _loginButton.interactable = newState == GameClientState.Connected;
-        _userMenuGrid.SetActive(newState == GameClientState.Registred);
-        _userQueueGrid.SetActive(newState == GameClientState.Queued);
-        _userInviteGrid.SetActive(newState == GameClientState.Invited);
-        _board.SetActive(newState == GameClientState.InGame);
-        _boardCanvas.SetActive(newState == GameClientState.InGame);
     }
 
     // Update is called once per frame
@@ -98,11 +81,75 @@ public class UnityController : MonoBehaviour
         {
             _waitingTimeText.text = $"waiting .. {(int)(Time.time - _queuedTime) % 60} sec";
         }
+
+        if (_newClientState)
+        {
+            _newClientState = false;
+
+            var clientState = _gameClient.GameClientState;
+
+            _clientStateText.text = clientState.ToString();
+            _connectButtonText.text = clientState == GameClientState.None ? "CONNECT" : "DISCONNECT";
+            _connectButtonText.color = clientState == GameClientState.None ? new Color(0.195f, 0.195f, 0.195f) : Color.white;
+            _connectButtonImage.color = clientState == GameClientState.None ? Color.white : Color.gray;
+
+            _menuCanvas.SetActive(clientState != GameClientState.InGame);
+
+            _queuedTime = clientState == GameClientState.Queued ? Time.time : 0;
+            _userWelcomeGrid.SetActive(clientState == GameClientState.None);
+            _userAccountGrid.SetActive(clientState == GameClientState.Connected);
+            _loginButton.interactable = clientState == GameClientState.Connected;
+            _userMenuGrid.SetActive(clientState == GameClientState.Registred);
+            _userQueueGrid.SetActive(clientState == GameClientState.Queued);
+            _userInviteGrid.SetActive(clientState == GameClientState.Invited);
+            _board.SetActive(clientState == GameClientState.InGame);
+            _boardCanvas.SetActive(clientState == GameClientState.InGame);
+
+        }
     }
 
     void OnApplicationQuit()
     {
         _gameClient.Disconnect();
+    }
+
+    internal void ProccessGameClientState(GameClientState oldState, GameClientState newState)
+    {
+        Debug.Log($"{oldState} -> {newState}");
+
+        _newClientState = true;
+    }
+
+    internal void ProccessInvitation()
+    {
+        Debug.Log($"ProccessInvitation()");
+    }
+
+    internal void ProccessInitialisation()
+    {
+        PowerInterpreter.SetPlayerId(_gameController.PlayerId);
+    }
+
+    internal void ProccessPowerHistory()
+    {
+        while(!_gameController.HistoryEntries.IsEmpty)
+        {
+            if (_gameController.HistoryEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
+            {
+                PowerInterpreter.AddHistoryEntry(historyEntry);
+            }
+        }
+    }
+
+    internal void ProccessPowerChoices()
+    {
+        PowerInterpreter.AddPowerEntityChoices(
+            new PowerEntityChoices(_gameController.PowerChoices.Index, _gameController.PowerChoices.ChoiceType, _gameController.PowerChoices.Entities));
+    }
+
+    internal void ProccessPowerOptions()
+    {
+        PowerInterpreter.AddPowerOptions(_gameController.PowerOptions);
     }
 
     public void OnClickConnect()
@@ -124,7 +171,6 @@ public class UnityController : MonoBehaviour
 
     public void OnClickLogin()
     {
-        Debug.Log($"OnClickLogin {_accountNameInputField.text} {_accountPasswordInputField.text}");
         var accountName = _accountNameInputField.text == string.Empty ? "Test123" : _accountNameInputField.text;
         var accountPassword = _accountPasswordInputField.text == string.Empty ? "abcdef1234" : _accountPasswordInputField.text;
         _gameClient.Register(accountName, accountPassword);
@@ -141,7 +187,26 @@ public class UnityController : MonoBehaviour
 
     public void OnClickQueue()
     {
-        Debug.Log($"OnClickQueue");
         _gameClient.Queue(GameType.Normal, DeckType.Random, null);
+    }
+
+    public void OnClickInviteAccept()
+    {
+        _gameController.SendInvitationReply(true);
+    }
+
+    public void OnClickInviteDecline()
+    {
+        _gameController.SendInvitationReply(false);
+    }
+
+    public void OnClickSendPowerChoices()
+    {
+        _gameController.SendBasePowerChoices();
+    }
+
+    public void OnClickSendPowerOptions()
+    {
+        _gameController.SendBasePowerOptions();
     }
 }
