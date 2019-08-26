@@ -23,11 +23,13 @@ public class MinionGen : AnimationGen
 
         var attack = frame.Find("Attack");
         attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
-        attack.GetComponent<TextMeshProUGUI>().color = entity.Origin != null && entity.Origin[GameTag.ATK] < entity.Tags[GameTag.ATK] ? Color.green : Color.white;
+        var originAttack = entity.Origin.ContainsKey(GameTag.ATK) ? entity.Origin[GameTag.ATK] : 0;
+        attack.GetComponent<TextMeshProUGUI>().color = originAttack < entity.Tags[GameTag.ATK] ? Color.green : Color.white;
 
         var health = frame.Find("Health");
         health.GetComponent<TextMeshProUGUI>().text = entity.Health.ToString();
-        health.GetComponent<TextMeshProUGUI>().color = entity.Tags[GameTag.DAMAGE] > 0 ? Color.red : entity.Origin != null && entity.Origin[GameTag.HEALTH] < entity.Tags[GameTag.HEALTH] ? Color.green : Color.white;
+        var originHealth = entity.Origin.ContainsKey(GameTag.HEALTH) ? entity.Origin[GameTag.HEALTH] : 0;
+        health.GetComponent<TextMeshProUGUI>().color = entity.Tags[GameTag.DAMAGE] > 0 ? Color.red : originHealth < entity.Tags[GameTag.HEALTH] ? Color.green : Color.white;
         //health.GetComponent<TextMeshProUGUI>().color = entity.HealthColor;
 
         var taunt = front.Find("Taunt");

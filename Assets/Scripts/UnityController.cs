@@ -16,7 +16,9 @@ public class UnityController : MonoBehaviour
 
     private Transform _clientPanel;
 
-    private InputField _accountNameInputField, _accountPasswordInputField;
+    private InputField _accountNameInputField, _accountPasswordInputField, _deckStringInput;
+
+    private Dropdown _deckTypeDropDown;
 
     private Button _loginButton;
 
@@ -62,6 +64,8 @@ public class UnityController : MonoBehaviour
         _userQueueGrid = userQueueGridParent.gameObject;
         _userInviteGrid = userInfoPanelParent.Find("UserInviteGrid").gameObject;
         _userPrepareGrid = userInfoPanelParent.Find("UserPrepareGrid").gameObject;
+        _deckTypeDropDown = _userPrepareGrid.transform.Find("DeckTypeDropDown").GetComponent<Dropdown>();
+        _deckStringInput = _userPrepareGrid.transform.Find("DeckStringInput").GetComponent<InputField>();
 
         _clientPanel.gameObject.SetActive(true);
         _board.SetActive(false);
@@ -94,6 +98,9 @@ public class UnityController : MonoBehaviour
             _connectButtonImage.color = clientState == GameClientState.None ? Color.white : Color.gray;
 
             _menuCanvas.SetActive(clientState != GameClientState.InGame);
+
+            // prep queue is unity specific
+            _userPrepareGrid.SetActive(false);
 
             _queuedTime = clientState == GameClientState.Queued ? Time.time : 0;
             _userWelcomeGrid.SetActive(clientState == GameClientState.None);
@@ -132,7 +139,7 @@ public class UnityController : MonoBehaviour
 
     internal void ProccessPowerHistory()
     {
-        while(!_gameController.HistoryEntries.IsEmpty)
+        while (!_gameController.HistoryEntries.IsEmpty)
         {
             if (_gameController.HistoryEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
             {
@@ -185,9 +192,30 @@ public class UnityController : MonoBehaviour
         PowerInterpreter.InitializeDebug();
     }
 
+    public void OnClickPreparedOkay()
+    {
+        if (Enum.TryParse(_deckTypeDropDown.captionText.text, out DeckType deckType))
+        {
+            Debug.Log($"{deckType} - {_deckStringInput.text}");
+            _gameClient.Queue(GameType.Normal, deckType, _deckStringInput.text);
+        }
+        else
+        {
+            OnClickPrepareBack();
+        }
+
+    }
+
+    public void OnClickPrepareBack()
+    {
+        _userPrepareGrid.SetActive(false);
+        _userMenuGrid.SetActive(true);
+    }
+
     public void OnClickQueue()
     {
-        _gameClient.Queue(GameType.Normal, DeckType.Random, null);
+        _userPrepareGrid.SetActive(true);
+        _userMenuGrid.SetActive(false);
     }
 
     public void OnClickInviteAccept()
