@@ -134,7 +134,7 @@ public class UnityController : MonoBehaviour
 
     internal void ProccessInitialisation()
     {
-        PowerInterpreter.SetPlayerId(_gameController.PlayerId);
+        PowerInterpreter.SetPlayerAndUserInfo(_gameController.PlayerId, _gameController.MyUserInfo, _gameController.OpUserInfo);
     }
 
     internal void ProccessPowerHistory()

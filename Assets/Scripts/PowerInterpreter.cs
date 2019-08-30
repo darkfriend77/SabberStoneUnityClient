@@ -40,11 +40,6 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private int _playerId;
 
-    public void SetPlayerId(int playerId)
-    {
-        _playerId = playerId;
-    }
-
     private Button _endTurnButton;
 
     private Game _game;
@@ -86,7 +81,11 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private Button _btnStepper;
 
+    private UserInfo _myUserInfo, _opUserInfo;
+
     public bool DebugFlag = false;
+
+    public bool UpdateUserInfo = false;
 
     public long Seed = 1111;
 
@@ -117,7 +116,6 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private void OnDisable()
     {
-
     }
 
     public void Start()
@@ -152,7 +150,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public void InitializeDebug()
     {
-        SetPlayerId(1);
+        SetPlayerAndUserInfo(1, null, null);
         _game = new Game(DruidVsWarrior(Seed));
         _gameStepper = DruidVsWarriorMoves;
     }
@@ -189,38 +187,35 @@ public partial class PowerInterpreter : MonoBehaviour
         _btnStepper.interactable = true;
     }
 
+    public void SetPlayerAndUserInfo(int playerId, UserInfo myUserInfo, UserInfo opUserInfo)
+    {
+        Debug.Log($"client player id is {playerId}");
+
+        _playerId = playerId;
+
+        if (myUserInfo == null || opUserInfo == null)
+        {
+            return;
+        }
+
+        _myUserInfo = myUserInfo;
+        _opUserInfo = opUserInfo;
+
+        UpdateUserInfo = true;
+    }
+
     public void Update()
     {
-        ReadHistory();
-    }
+        if (UpdateUserInfo)
+        {
+            _mainGame.transform.Find(GetParentObject("Stats", _playerId)).Find("AccountName").GetComponent<Text>().text = $"{_myUserInfo.AccountName}[{_myUserInfo.PlayerId}]";
+            _mainGame.transform.Find(GetParentObject("Stats", _opUserInfo.PlayerId)).Find("AccountName").GetComponent<Text>().text = $"{_opUserInfo.AccountName}[{_opUserInfo.PlayerId}]";
+            UpdateUserInfo = false;
+        }
 
-    public void OnClickEndTurn()
-    {
-
-    }
-
-    //public void ReadHistory(List<IPowerHistoryEntry> powerHistoryEntries)
-    public void ReadHistory()
-    {
         if (AllAnimStatesAreNone)
         {
-
-            if (!_historyEntries.IsEmpty)
-            {
-                PlayerState = PlayerClientState.Wait;
-
-                if (_historyEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
-                {
-                    ReadHistoryEntry(historyEntry);
-
-                    PowerHistoryText.text = _historyEntries.Count().ToString();
-                }
-
-                PlayerState = PlayerClientState.Wait;
-                PowerChoicesText.text = "0";
-                PowerOptionsText.text = "0";
-            }
-            else
+            if (!ReadHistory())
             {
                 if (PlayerState != PlayerClientState.Choice && ReadPowerChoices())
                 {
@@ -231,7 +226,38 @@ public partial class PowerInterpreter : MonoBehaviour
                     PlayerState = PlayerClientState.Option;
                 }
             }
+
+            _endTurnButton.interactable = PlayerState == PlayerClientState.Option;
         }
+    }
+
+    public void OnClickEndTurn()
+    {
+
+    }
+
+    //public void ReadHistory(List<IPowerHistoryEntry> powerHistoryEntries)
+    public bool ReadHistory()
+    {
+        if (_historyEntries.IsEmpty)
+        {
+            return false;
+        }
+
+        PlayerState = PlayerClientState.Wait;
+
+        if (_historyEntries.TryDequeue(out IPowerHistoryEntry historyEntry))
+        {
+            ReadHistoryEntry(historyEntry);
+
+            PowerHistoryText.text = _historyEntries.Count().ToString();
+        }
+
+        PlayerState = PlayerClientState.Wait;
+        PowerChoicesText.text = "0";
+        PowerOptionsText.text = "0";
+
+        return true;
     }
 
     public bool ReadPowerChoices()
@@ -242,10 +268,6 @@ public partial class PowerInterpreter : MonoBehaviour
             _myChoicesPanel.gameObject.GetComponent<CardContainer>().Clear();
             return false;
         }
-        //else if (_powerEntityChoices.Index <= _currentPowerEntityChoicesIndex)
-        //{
-        //    return false;
-        //}
 
         Debug.Log($"Current PowerChoices: {_powerEntityChoices.ChoiceType} with {_powerEntityChoices.Entities.Count} entities, {_powerEntityChoices.Index}");
 
@@ -282,17 +304,12 @@ public partial class PowerInterpreter : MonoBehaviour
             _endTurnButton.interactable = false;
             return false;
         }
-        //else if (_powerOptions.Index <= _currentPowerOptionsIndex)
-        //{
-        //    return false;
-        //}
 
         PowerOptionsText.text = _powerOptions.PowerOptionList.Count.ToString();
 
-        //var endTurnOption = PowerOptionList.Find(p => p.OptionType == OptionType.END_TURN);
-        //_endTurnButton.interactable = endTurnOption != null;
+        _endTurnButton.interactable = _powerOptions.PowerOptionList.Any(p => p.OptionType == OptionType.END_TURN);
 
-        //// display the other power options ...
+        // display the other power options ...
         //foreach (var powerOption in PowerOptionList)
         //{
 
@@ -348,8 +365,11 @@ public partial class PowerInterpreter : MonoBehaviour
                 UpdateMetaData(historyEntry as PowerHistoryMetaData);
                 break;
 
-            case PowerType.RESET_GAME:
             case PowerType.CHANGE_ENTITY:
+                UpdateChangeEntity(historyEntry as PowerHistoryChangeEntity);
+                break;
+
+            case PowerType.RESET_GAME:
             default:
                 throw new Exception();
         }
@@ -872,7 +892,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private void UpdateHideEntity(PowerHistoryHideEntity entity)
     {
-        // Debug.Log(showEntity.Print());
+        Debug.Log("[Hide Entity]");
         if (!EntitiesExt.TryGetValue(entity.EntityID, out EntityExt value))
         {
             throw new Exception($"Can't find entity with the id {entity.EntityID} in our dictionary!");
@@ -1003,6 +1023,11 @@ public partial class PowerInterpreter : MonoBehaviour
             case Zone.SECRET:
                 break;
         }
+    }
+
+    private void UpdateChangeEntity(PowerHistoryChangeEntity powerHistoryChangeEntity)
+    {
+        Debug.Log($"[Change Entity]:{powerHistoryChangeEntity.Print()}");
     }
 
     private Card GetCardFromName(PowerHistoryEntity entity)
