@@ -194,10 +194,10 @@ public class UnityController : MonoBehaviour
 
     public void OnClickPreparedOkay()
     {
-        if (Enum.TryParse(_deckTypeDropDown.captionText.text, out DeckType deckType))
+        if (_deckStringInput.text != string.Empty)
         {
-            Debug.Log($"{deckType} - {_deckStringInput.text}");
-            _gameClient.Queue(GameType.Normal, deckType, _deckStringInput.text);
+            Debug.Log($"DeckString: {_deckStringInput.text}");
+            _gameClient.Queue(GameType.Normal, _deckStringInput.text);
         }
         else
         {
