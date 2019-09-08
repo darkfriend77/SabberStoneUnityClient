@@ -64,7 +64,6 @@ public class UnityController : MonoBehaviour
         _userQueueGrid = userQueueGridParent.gameObject;
         _userInviteGrid = userInfoPanelParent.Find("UserInviteGrid").gameObject;
         _userPrepareGrid = userInfoPanelParent.Find("UserPrepareGrid").gameObject;
-        _deckTypeDropDown = _userPrepareGrid.transform.Find("DeckTypeDropDown").GetComponent<Dropdown>();
         _deckStringInput = _userPrepareGrid.transform.Find("DeckStringInput").GetComponent<InputField>();
 
         _clientPanel.gameObject.SetActive(true);
@@ -106,7 +105,7 @@ public class UnityController : MonoBehaviour
             _userWelcomeGrid.SetActive(clientState == GameClientState.None);
             _userAccountGrid.SetActive(clientState == GameClientState.Connected);
             _loginButton.interactable = clientState == GameClientState.Connected;
-            _userMenuGrid.SetActive(clientState == GameClientState.Registred);
+            _userMenuGrid.SetActive(clientState == GameClientState.Registered);
             _userQueueGrid.SetActive(clientState == GameClientState.Queued);
             _userInviteGrid.SetActive(clientState == GameClientState.Invited);
             _board.SetActive(clientState == GameClientState.InGame);

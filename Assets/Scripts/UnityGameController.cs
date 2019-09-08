@@ -16,22 +16,22 @@ public class UnityGameController : GameController
         _controller = controller;
     }
 
-    public override void CallInitialisation()
+    protected override void CallInitialisation()
     {
         _controller.ProccessInitialisation();
     }
 
-    public override void CallPowerHistory()
+    protected override void CallPowerHistory()
     {
         _controller.ProccessPowerHistory();
     }
 
-    public override void CallPowerChoices()
+    protected override void CallPowerChoices()
     {
         _controller.ProccessPowerChoices();
     }
 
-    public override void CallPowerOptions()
+    protected override void CallPowerOptions()
     {
         _controller.ProccessPowerOptions();
     }
@@ -45,4 +45,5 @@ public class UnityGameController : GameController
     {
         base.CallPowerOptions();
     }
+
 }
