@@ -12,17 +12,18 @@ public class UnityController : MonoBehaviour
 {
     private GameObject _menuCanvas, _board, _boardCanvas,
         _userWelcomeGrid, _userAccountGrid, _userMenuGrid,
-        _userQueueGrid, _userInviteGrid, _userPrepareGrid;
+        _userWaitingGrid, _userInviteGrid, _userPrepareGrid, 
+        _userVisitAccountGrid;
 
     private Transform _clientPanel;
 
-    private InputField _accountNameInputField, _accountPasswordInputField, _deckStringInput;
+    private InputField _accountNameInputField, _accountPasswordInputField, _deckStringInput, _accountStringInput;
 
     private Dropdown _deckTypeDropDown;
 
     private Button _loginButton;
 
-    private Text _clientStateText, _connectButtonText, _waitingTimeText;
+    private Text _clientStateText, _connectButtonText, _waitingText, _waitingTimeText;
 
     private Image _connectButtonImage;
 
@@ -59,12 +60,15 @@ public class UnityController : MonoBehaviour
         _accountPasswordInputField = userAccountGridParent.Find("AccountPasswordInput").GetComponent<InputField>();
         _loginButton = userAccountGridParent.Find("LoginButton").GetComponent<Button>();
         _userMenuGrid = userInfoPanelParent.Find("UserMenuGrid").gameObject;
-        var userQueueGridParent = userInfoPanelParent.Find("UserQueueGrid");
-        _waitingTimeText = userQueueGridParent.Find("WaitingTimeText").GetComponent<Text>();
-        _userQueueGrid = userQueueGridParent.gameObject;
+        var userWaitingGridParent = userInfoPanelParent.Find("UserWaitingGrid");
+        _waitingText = userWaitingGridParent.Find("WaitingText").GetComponent<Text>();
+        _waitingTimeText = userWaitingGridParent.Find("WaitingTimeText").GetComponent<Text>();
+        _userWaitingGrid = userWaitingGridParent.gameObject;
         _userInviteGrid = userInfoPanelParent.Find("UserInviteGrid").gameObject;
         _userPrepareGrid = userInfoPanelParent.Find("UserPrepareGrid").gameObject;
         _deckStringInput = _userPrepareGrid.transform.Find("DeckStringInput").GetComponent<InputField>();
+        _userVisitAccountGrid = userInfoPanelParent.Find("UserVisitAccountGrid").gameObject;
+        _accountStringInput = _userVisitAccountGrid.transform.Find("AccountStringInput").GetComponent<InputField>();
 
         _clientPanel.gameObject.SetActive(true);
         _board.SetActive(false);
@@ -100,13 +104,22 @@ public class UnityController : MonoBehaviour
 
             // prep queue is unity specific
             _userPrepareGrid.SetActive(false);
+            _userVisitAccountGrid.SetActive(false);
 
-            _queuedTime = clientState == GameClientState.Queued ? Time.time : 0;
+            _queuedTime = 0;
+            if (clientState == GameClientState.Queued || clientState == GameClientState.Placed)
+            {
+                _queuedTime = Time.time ;
+                _waitingText.text = clientState == GameClientState.Queued ? 
+                    "You're queued to play a game, be patient." :
+                    "You're waiting on visitor account, chill.";
+            }
+
             _userWelcomeGrid.SetActive(clientState == GameClientState.None);
             _userAccountGrid.SetActive(clientState == GameClientState.Connected);
             _loginButton.interactable = clientState == GameClientState.Connected;
             _userMenuGrid.SetActive(clientState == GameClientState.Registered);
-            _userQueueGrid.SetActive(clientState == GameClientState.Queued);
+            _userWaitingGrid.SetActive(clientState == GameClientState.Queued || clientState == GameClientState.Placed);
             _userInviteGrid.SetActive(clientState == GameClientState.Invited);
             _board.SetActive(clientState == GameClientState.InGame);
             _boardCanvas.SetActive(clientState == GameClientState.InGame);
@@ -202,18 +215,38 @@ public class UnityController : MonoBehaviour
         {
             OnClickPrepareBack();
         }
+    }
+
+    public void OnClickVisitOkay()
+    {
+        if (_accountStringInput.text != string.Empty)
+        {
+            Debug.Log($"Account: {_accountStringInput.text}");
+            _gameClient.VisitAccount(true, _accountStringInput.text);
+        }
+        else
+        {
+            OnClickPrepareBack();
+        }
 
     }
 
     public void OnClickPrepareBack()
     {
         _userPrepareGrid.SetActive(false);
+        _userVisitAccountGrid.SetActive(false);
         _userMenuGrid.SetActive(true);
     }
 
     public void OnClickQueue()
     {
         _userPrepareGrid.SetActive(true);
+        _userMenuGrid.SetActive(false);
+    }
+
+    public void OnClickVisit()
+    {
+        _userVisitAccountGrid.SetActive(true);
         _userMenuGrid.SetActive(false);
     }
 
