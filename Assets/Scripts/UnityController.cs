@@ -204,6 +204,15 @@ public class UnityController : MonoBehaviour
         PowerInterpreter.InitializeDebug();
     }
 
+    public void OnClickReplayGame()
+    {
+        _clientPanel.gameObject.SetActive(false);
+        _board.SetActive(true);
+        _boardCanvas.SetActive(true);
+
+        PowerInterpreter.InitializeReplay();
+    }
+
     public void OnClickPreparedOkay()
     {
         if (_deckStringInput.text != string.Empty)

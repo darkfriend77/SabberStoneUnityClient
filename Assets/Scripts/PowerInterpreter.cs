@@ -1,4 +1,6 @@
-﻿using SabberStoneContract.Model;
+﻿using Newtonsoft.Json;
+using SabberStoneContract.Core;
+using SabberStoneContract.Model;
 using SabberStoneCore.Config;
 using SabberStoneCore.Enums;
 using SabberStoneCore.Kettle;
@@ -100,6 +102,8 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private PlayerClientState _playerState;
 
+    private ConcurrentQueue<GameData> _replayDataObjects;
+
     public PlayerClientState PlayerState
     {
         get => _playerState;
@@ -155,8 +159,87 @@ public partial class PowerInterpreter : MonoBehaviour
         _gameStepper = DruidVsWarriorMoves;
     }
 
+    public void InitializeReplay()
+    {
+        TextAsset txt = (TextAsset)Resources.Load("Test");
+        Debug.Log($"reading {txt.name}.");
+        var allLines = txt.text.Split(Environment.NewLine.ToCharArray());
+        _replayDataObjects = new ConcurrentQueue<GameData>();
+        foreach (string line in allLines)
+        {
+            var gameServerObject = JsonConvert.DeserializeObject<GameServerStream>(line);
+            if (gameServerObject != null && gameServerObject.MessageType == MsgType.InGame)
+            {
+                _replayDataObjects.Enqueue(JsonConvert.DeserializeObject<GameData>(gameServerObject.Message));
+            }
+        }
+        Debug.Log($"loaded {_replayDataObjects.Count} game data objects.");
+
+        if (!_replayDataObjects.TryDequeue(out GameData gameData) || gameData.GameDataType != GameDataType.Initialisation)
+        {
+            Debug.LogError("Couldn't dequeue the initialisation gamedata packet of the replay, please terminate the application!");
+            return;
+        }
+
+        var userInfos = JsonConvert.DeserializeObject<List<UserInfo>>(gameData.GameDataObject);
+        SetPlayerAndUserInfo(gameData.PlayerId, userInfos.Where(p => p.PlayerId == gameData.PlayerId).First(), userInfos.Where(p => p.PlayerId != gameData.PlayerId).First());
+    }
+
+    private void ReplayGame()
+    {
+
+        while(_replayDataObjects.TryPeek(out GameData peekGameData) 
+            && peekGameData.GameDataType != GameDataType.PowerHistory)
+        {
+            _replayDataObjects.TryDequeue(out GameData gameData);
+
+            switch (gameData.GameDataType)
+            {
+                case GameDataType.Initialisation:
+                    return;
+
+                case GameDataType.PowerChoices:
+                    var powerChoices = JsonConvert.DeserializeObject<PowerChoices>(gameData.GameDataObject);
+                    _powerEntityChoices = new PowerEntityChoices(powerChoices.Index, powerChoices.ChoiceType, powerChoices.Entities);
+                    break;
+
+                case GameDataType.PowerChoice:
+                    var powerChoice = JsonConvert.DeserializeObject<PowerChoices>(gameData.GameDataObject);
+                    break;
+
+                case GameDataType.PowerOptions:
+                    var powerOptions = JsonConvert.DeserializeObject<PowerOptions>(gameData.GameDataObject);
+                    _powerOptions = new PowerOptions()
+                    {
+                        Index = powerOptions.Index,
+                        PowerOptionList = powerOptions.PowerOptionList
+                    };
+                    break;
+
+                case GameDataType.PowerOption:
+                    var powerOption = JsonConvert.DeserializeObject<PowerOptionChoice>(gameData.GameDataObject);
+                    break;
+
+                case GameDataType.Result:
+                    break;
+            }
+        }
+
+        if (_replayDataObjects.TryDequeue(out GameData gameHistoryData) && gameHistoryData.GameDataType == GameDataType.PowerHistory)
+        {
+            var powerHistory = JsonConvert.DeserializeObject<List<IPowerHistoryEntry>>(gameHistoryData.GameDataObject, new PowerHistoryConverter());
+            powerHistory.ForEach(p => _historyEntries.Enqueue(p));
+        }
+    }
+
     public void OnClickStepByStep()
     {
+        if (_replayDataObjects != null)
+        {
+            ReplayGame();
+            return;
+        }
+
         if (_gameStepper == null || _game == null)
         {
             Debug.Log("no stepper or game initialized");
@@ -186,6 +269,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
         _btnStepper.interactable = true;
     }
+
 
     public void SetPlayerAndUserInfo(int playerId, UserInfo myUserInfo, UserInfo opUserInfo)
     {
