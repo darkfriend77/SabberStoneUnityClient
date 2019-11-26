@@ -11,38 +11,18 @@ using SabberStoneCore.Model.Entities;
 using System;
 using SabberStoneCore.Kettle;
 
-public class CardGen : BasicGen
+public class CardGen : AnimationGen
 {
-
-    // Start is called before the first frame update
-    void Start()
-    {
-
-        //CurrentCard = RandomNewCard();
-
-        //if (CurrentCard != null)
-        //{
-        //    //var card = Cards.FromName("Knife Juggler");
-        //    //CurrentCard = Cards.FromName("Fiery War Axe");
-        //    Debug.Log($"Current card: {CurrentCard.Name} [{CurrentCard.Id}]!");
-        //    CreateCard(CurrentCard);
-        //}
-    }
-
     internal void Show(bool showFlag)
     {
         transform.Find("Front").gameObject.SetActive(showFlag);
         transform.Find("Back").gameObject.SetActive(!showFlag);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public override void UpdateEntity(EntityExt entity)
     {
+        base.UpdateEntity(entity);
+
         CardType cardType = (CardType)entity.Tags[GameTag.CARDTYPE];
 
         var front = transform.Find("Front");
@@ -51,6 +31,8 @@ public class CardGen : BasicGen
         var mana = frame.Find("Mana");
         var attack = frame.Find("Attack");
         var health = frame.Find("Health");
+
+        var originCost = entity.Origin.ContainsKey(GameTag.COST) ? entity.Origin[GameTag.COST] : 0;
 
         switch (cardType)
         {
@@ -61,16 +43,20 @@ public class CardGen : BasicGen
             case CardType.PLAYER:
                 break;
             case CardType.HERO:
+                mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.HEALTH].ToString();
                 attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
                 break;
             case CardType.MINION:
                 mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.HEALTH].ToString();
                 attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
                 break;
             case CardType.SPELL:
                 mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.gameObject.SetActive(false);
                 attack.gameObject.SetActive(false);
                 break;
@@ -78,6 +64,7 @@ public class CardGen : BasicGen
                 break;
             case CardType.WEAPON:
                 mana.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.COST].ToString();
+                mana.GetComponent<TextMeshProUGUI>().color = originCost > entity.Tags[GameTag.COST] ? Color.green : originCost < entity.Tags[GameTag.COST] ? Color.red : Color.white;
                 health.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.DURABILITY].ToString();
                 attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
                 break;
@@ -90,7 +77,7 @@ public class CardGen : BasicGen
         }
     }
 
-        private Sprite GetLegendarySprite(CardType cardType)
+    private Sprite GetLegendarySprite(CardType cardType)
     {
         switch (cardType)
         {
@@ -275,4 +262,5 @@ public class CardGen : BasicGen
         // set to visible
         Show(true);
     }
+
 }

@@ -9,7 +9,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HeroGen : BasicGen
+public class HeroGen : AnimationGen
 {
     private Hero hero;
 
@@ -33,20 +33,10 @@ public class HeroGen : BasicGen
 
     private PowerHistoryEntity heroEntity;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public override void UpdateEntity(EntityExt entity)
     {
+        base.UpdateEntity(entity);
+
         var front = transform.Find("Front");
         var frame = front.Find("Frame");
 
@@ -82,6 +72,9 @@ public class HeroGen : BasicGen
         quest = frame.Find("Quest").gameObject;
         quest.SetActive(false);
 
+        var exhausted = frame.Find("Exhausted");
+        exhausted.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.EXHAUSTED) && entity.Tags[GameTag.EXHAUSTED] == 1);
+
         dead = frame.Find("Dead").gameObject;
         dead.SetActive(entity.Tags[GameTag.TO_BE_DESTROYED] == 1);
     }
@@ -106,4 +99,5 @@ public class HeroGen : BasicGen
         UpdateEntity(entity);
 
     }
+
 }

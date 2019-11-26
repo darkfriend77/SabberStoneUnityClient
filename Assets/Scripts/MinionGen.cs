@@ -8,31 +8,29 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MinionGen : BasicGen
+public class MinionGen : AnimationGen
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
     public override void UpdateEntity(EntityExt entity)
     {
+        base.UpdateEntity(entity);
+
         var front = transform.Find("Front");
         var frame = front.Find("Frame");
 
+        // TODO add effect for buff and debuff
+        var isBuffed = false;
+        var isDeBuffed = false;
+
         var attack = frame.Find("Attack");
         attack.GetComponent<TextMeshProUGUI>().text = entity.Tags[GameTag.ATK].ToString();
+        var originAttack = entity.Origin.ContainsKey(GameTag.ATK) ? entity.Origin[GameTag.ATK] : 0;
+        attack.GetComponent<TextMeshProUGUI>().color = originAttack < entity.Tags[GameTag.ATK] ? Color.green : Color.white;
 
         var health = frame.Find("Health");
         health.GetComponent<TextMeshProUGUI>().text = entity.Health.ToString();
-        health.GetComponent<TextMeshProUGUI>().color = entity.HealthColor;
+        var originHealth = entity.Origin.ContainsKey(GameTag.HEALTH) ? entity.Origin[GameTag.HEALTH] : 0;
+        health.GetComponent<TextMeshProUGUI>().color = entity.Tags[GameTag.DAMAGE] > 0 ? Color.red : originHealth < entity.Tags[GameTag.HEALTH] ? Color.green : Color.white;
+        //health.GetComponent<TextMeshProUGUI>().color = entity.HealthColor;
 
         var taunt = front.Find("Taunt");
         taunt.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TAUNT) && entity.Tags[GameTag.TAUNT] == 1);
@@ -61,7 +59,11 @@ public class MinionGen : BasicGen
         var stealth = front.Find("Stealth");
         stealth.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.STEALTH) && entity.Tags[GameTag.STEALTH] == 1);
 
-        //var deathrattle = frame.Find("Untargetable");
+        var untargetable = front.Find("Untargetable");
+        untargetable.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.UNTOUCHABLE) && entity.Tags[GameTag.UNTOUCHABLE] == 1);
+
+        var exhausted = front.Find("Exhausted");
+        exhausted.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.EXHAUSTED) && entity.Tags[GameTag.EXHAUSTED] == 1);
 
         var dead = front.Find("Dead");
         dead.gameObject.SetActive(entity.Tags.ContainsKey(GameTag.TO_BE_DESTROYED) && entity.Tags[GameTag.TO_BE_DESTROYED] == 1);

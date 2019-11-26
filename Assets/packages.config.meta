@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 6b7d51aa6c509464f941c236c7e9cd29
+guid: df65b43345b8e4041ae86c7c43c5f22f
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -25,7 +25,7 @@ PluginImporter:
   - first:
       Windows Store Apps: WindowsStoreApps
     second:
-      enabled: 1
+      enabled: 0
       settings: {}
   userData: 
   assetBundleName: 

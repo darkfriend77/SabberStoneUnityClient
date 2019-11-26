@@ -5,12 +5,14 @@ using UnityEngine;
 
 public class EntityExt
 {
+    public IDictionary<GameTag, int> Origin { get; set; }
+
     public int Id { get; set; }
     public BasicGen GameObjectScript { get; set; }
     public string CardId { get; set; }
     public string Name { get; set; }
     public string Description { get; set; }
-    public Dictionary<GameTag, int> Tags { get; set; } = new Dictionary<GameTag, int>();
+    public IDictionary<GameTag, int> Tags { get; set; } = new Dictionary<GameTag, int>();
 
     public CardType CardType => Tags.ContainsKey(GameTag.CARDTYPE) ? (CardType)Tags[GameTag.CARDTYPE] : CardType.INVALID;
 
@@ -21,7 +23,6 @@ public class EntityExt
 
     public int Durability => Tags[GameTag.DURABILITY] - Tags[GameTag.DAMAGE];
     public Color DurabilityColor => Tags[GameTag.DAMAGE] == 0 ? Color.white : Color.red;
-
 
     public string Print()
     {

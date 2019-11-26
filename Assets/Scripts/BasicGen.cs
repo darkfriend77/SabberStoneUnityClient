@@ -12,27 +12,24 @@ public enum AnimationState
 {
     NONE,
     ATTACK,
+    DESTROY,
+    HEALTHCHANGE,
     DEAD,
-    DONE
+    DONE,
+    TARGETING
 }
 
 public abstract class BasicGen : MonoBehaviour
 {
     public AnimationState AnimState { get; set; }
 
-    public void Start()
-    {
-    }
-
-    void Update()
-    {
-
-    }
-
+    internal EntityExt _entityExt;
 
     public virtual void UpdateEntity(EntityExt entityExt)
     {
-        Debug.Log($"UpdateEntity not implemented! {gameObject.GetType()}");
+        _entityExt = entityExt;
     }
+
+    public int Tag(GameTag gameTag) => _entityExt.Tags[gameTag];
 
 }
