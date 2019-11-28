@@ -159,11 +159,20 @@ public partial class PowerInterpreter : MonoBehaviour
         _gameStepper = DruidVsWarriorMoves;
     }
 
-    public void InitializeReplay()
+    public void InitializeReplay(string fileContent = "")
     {
-        TextAsset txt = (TextAsset)Resources.Load("Test");
-        Debug.Log($"reading {txt.name}.");
-        var allLines = txt.text.Split(Environment.NewLine.ToCharArray());
+        string[] allLines = null;
+        if (fileContent.Length == 0)
+        {
+            TextAsset txt = (TextAsset)Resources.Load("Test");
+            Debug.Log($"reading {txt.name}.");
+            allLines = txt.text.Split(Environment.NewLine.ToCharArray());
+        }
+        else
+        {
+            allLines = fileContent.Split(Environment.NewLine.ToCharArray());
+        }
+
         _replayDataObjects = new ConcurrentQueue<GameData>();
         foreach (string line in allLines)
         {
@@ -188,7 +197,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private void ReplayGame()
     {
 
-        while(_replayDataObjects.TryPeek(out GameData peekGameData) 
+        while (_replayDataObjects.TryPeek(out GameData peekGameData)
             && peekGameData.GameDataType != GameDataType.PowerHistory)
         {
             _replayDataObjects.TryDequeue(out GameData gameData);

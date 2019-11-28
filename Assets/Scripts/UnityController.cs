@@ -4,7 +4,9 @@ using SabberStoneCore.Kettle;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -210,7 +212,9 @@ public class UnityController : MonoBehaviour
         _board.SetActive(true);
         _boardCanvas.SetActive(true);
 
-        PowerInterpreter.InitializeReplay();
+        string path = EditorUtility.OpenFilePanel("Choose log file to replay", "", "txt");
+
+        PowerInterpreter.InitializeReplay(path.Length != 0 ? File.ReadAllText(path): string.Empty);
     }
 
     public void OnClickPreparedOkay()
