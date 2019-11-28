@@ -2723,6 +2723,100 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 439899165}
   m_CullTransparentMesh: 0
+--- !u!1 &444656399
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 444656401}
+  - component: {fileID: 444656400}
+  m_Layer: 0
+  m_Name: FileBrowserManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &444656400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 444656399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 2062179358, guid: 380817e9bd82843939e9ccfde324cb95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  autoAddExtension: 1
+  addedExtension: txt
+  defaultFileName: 
+  maxFileNameLength: 32
+  preventIllegalCharInput: 1
+  illegalChars: \/|:<>?"+[]
+  useDeleteButton: 0
+  limitToInitialFolder: 0
+  showVolumes: 0
+  volumesAreSeparate: 0
+  showDate: 0
+  dateWidthAdd: 8
+  sortType: 0
+  m_allowMultiSelect: 0
+  allowAppBundleBrowsing: 0
+  showHiddenMacFiles: 0
+  filterFiles: 0
+  filterFileExtensions: []
+  useFilterButton: 0
+  windowTabOffset: {x: 0, y: -2}
+  windowTab: {fileID: 2800000, guid: af702ba2a5f4048ad9bd6f60b5a6909c, type: 3}
+  allowWindowResize: 1
+  allowWindowDrag: 1
+  fileWindowID: 50
+  messageWindowID: 51
+  fileWindowInset: 25
+  defaultFileWindowRect:
+    serializedVersion: 2
+    x: 400
+    y: 150
+    width: 500
+    height: 600
+  minWindowWidth: 435
+  minWindowHeight: 300
+  messageWindowSize: {x: 400, y: 160}
+  guiDepth: -1
+  popupRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 300
+    height: 33
+  buttonSize: {x: 72, y: 35}
+  guiSkin: {fileID: 11400000, guid: 437d14becad2449819a39ae743d8cb5a, type: 2}
+  highlightTexture: {fileID: 2800000, guid: 4ee9864d13ddd40a8b3bcafb5c75be6d, type: 3}
+  highlightTextColor: {r: 0, g: 0, b: 0, a: 1}
+  messageWindowTexture: {fileID: 2800000, guid: 4767637e9ea4b44da8648130624fe1e7,
+    type: 3}
+  driveIcon: {fileID: 2800000, guid: 5253a30876fb9444199d71e8f288385d, type: 3}
+  folderIcon: {fileID: 2800000, guid: 87c12970698a14a46b844b023ef3ab94, type: 3}
+  fileIcon: {fileID: 2800000, guid: 5d92a318bda704d1993660628c2b4819, type: 3}
+--- !u!4 &444656401
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 444656399}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 833.90674, y: 129.56021, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 8
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &446425499
 GameObject:
   m_ObjectHideFlags: 0

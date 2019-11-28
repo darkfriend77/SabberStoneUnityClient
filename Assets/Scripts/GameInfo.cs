@@ -48,6 +48,12 @@ public class GameInfo : MonoBehaviour
 
     internal void GameInfoAnim(PlayState playState)
     {
+
+        if (_message != null)
+        {
+            Destroy(_message);
+        }
+
         switch (playState)
         {
             case PlayState.WON:

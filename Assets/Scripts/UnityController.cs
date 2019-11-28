@@ -208,13 +208,16 @@ public class UnityController : MonoBehaviour
 
     public void OnClickReplayGame()
     {
+        UniFileBrowser.use.OpenFileWindow(OpenReplayFile);
+    }
+
+    private void OpenReplayFile(string path)
+    {
         _clientPanel.gameObject.SetActive(false);
         _board.SetActive(true);
         _boardCanvas.SetActive(true);
 
-        string path = EditorUtility.OpenFilePanel("Choose log file to replay", "", "txt");
-
-        PowerInterpreter.InitializeReplay(path.Length != 0 ? File.ReadAllText(path): string.Empty);
+        PowerInterpreter.InitializeReplay(path.Length != 0 ? File.ReadAllText(path) : string.Empty);
     }
 
     public void OnClickPreparedOkay()
