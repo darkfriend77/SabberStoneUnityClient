@@ -58,6 +58,8 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private ConcurrentQueue<IPowerHistoryEntry> _historyEntries;
 
+    private GameInfo _gameInfo;
+
     public void AddHistoryEntry(IPowerHistoryEntry historyEntry)
     {
         _historyEntries.Enqueue(historyEntry);
@@ -140,7 +142,6 @@ public partial class PowerInterpreter : MonoBehaviour
         _clientPanel = menuCanvas.transform.Find("ClientPanel");
 
         _mainGame = _boardCanvas.transform.Find("MainGame");
-        _mainGame.transform.Find("GameInfo").GetComponent<GameInfo>().gameObject.SetActive(false);
 
         //_mainGame.transform.Find("MyHand").gameObject.SetActive(false);
         //_mainGame.transform.Find("OpHand").gameObject.SetActive(false);
@@ -159,11 +160,16 @@ public partial class PowerInterpreter : MonoBehaviour
 
         _btnStepper = _boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
 
+        _gameInfo = _mainGame.transform.Find("GameInfo").GetComponent<GameInfo>();
     }
 
     public void Initialize()
     {
         PlayerState = PlayerClientState.None;
+
+
+        _gameInfo.Clear();
+        _gameInfo.gameObject.SetActive(false);
 
         _historyEntries = new ConcurrentQueue<IPowerHistoryEntry>();
 
@@ -764,7 +770,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private void GameFinished(PlayState playState)
     {
-        _mainGame.transform.Find("GameInfo").GetComponent<GameInfo>().GameInfoAnim(playState);
+        _gameInfo.GameInfoAnim(playState);
     }
 
     private void DoZoneChange(EntityExt entityExt, Zone prevZone, Zone nextZone)

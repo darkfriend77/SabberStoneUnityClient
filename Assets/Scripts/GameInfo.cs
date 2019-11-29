@@ -46,13 +46,17 @@ public class GameInfo : MonoBehaviour
         }
     }
 
-    internal void GameInfoAnim(PlayState playState)
+    internal void Clear()
     {
-
         if (_message != null)
         {
             Destroy(_message);
         }
+    }
+
+    internal void GameInfoAnim(PlayState playState)
+    {
+        Clear();
 
         switch (playState)
         {
