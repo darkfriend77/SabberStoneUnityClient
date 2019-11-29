@@ -18,7 +18,7 @@ using UnityEngine.UI;
 
 public partial class PowerInterpreter : MonoBehaviour
 {
-    private Dictionary<int, EntityExt> EntitiesExt = new Dictionary<int, EntityExt>();
+    private Dictionary<int, EntityExt> _entitiesExt;
 
     public GameObject HeroPrefab;
 
@@ -32,17 +32,19 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public GameObject ManaPrefab;
 
+    private GameObject _myManaGameObject, _opManaGameObject;
+
     private GameObject _board, _boardCanvas;
 
-    private List<GameObject> allGameObjects;
+    private List<GameObject> _allGameObjects;
 
     private EntityExt _attackingEntity;
 
     private EntityExt _defendingEntity;
 
-    private Transform gridParent, _clientPanel, _mainGame, _myChoices, _myChoicesPanel;
+    private Transform _gridParent, _clientPanel, _mainGame, _myMana, _opMana, _myChoices, _myChoicesPanel;
 
-    public bool AllAnimStatesAreNone => EntitiesExt.Values.ToList().TrueForAll(p => p.GameObjectScript == null || p.GameObjectScript.AnimState == AnimationState.NONE);
+    public bool AllAnimStatesAreNone => _entitiesExt.Values.ToList().TrueForAll(p => p.GameObjectScript == null || p.GameObjectScript.AnimState == AnimationState.NONE);
 
     private int _playerId;
 
@@ -81,7 +83,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public Text PowerHistoryText, PowerOptionsText, PowerChoicesText, PlayerStateText;
 
-    public EntityExt MyPlayer => EntitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == _playerId);
+    public EntityExt MyPlayer => _entitiesExt.Values.FirstOrDefault(p => p.Tags.TryGetValue(GameTag.PLAYER_ID, out int value) && value == _playerId);
 
     private Func<int, Game, bool> _gameStepper;
 
@@ -128,10 +130,6 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public void Start()
     {
-        allGameObjects = new List<GameObject>();
-
-        PlayerState = PlayerClientState.None;
-
         //consoleScrollRect = transform.parent.Find("Console").GetComponent<ScrollRect>();
         //gridParent = transform.parent.Find("Console").Find("Viewport").Find("Grid");
         var rootGameObjectList = UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList();
@@ -147,6 +145,9 @@ public partial class PowerInterpreter : MonoBehaviour
         //_mainGame.transform.Find("MyHand").gameObject.SetActive(false);
         //_mainGame.transform.Find("OpHand").gameObject.SetActive(false);
 
+        _myMana = _mainGame.transform.Find("MyMana");
+        _opMana = _mainGame.transform.Find("OpMana");
+
         _myChoices = _mainGame.transform.Find("MyChoices");
         _myChoicesPanel = _myChoices.transform.Find("MyChoicesPanel");
         _myChoices.gameObject.SetActive(false);
@@ -156,14 +157,46 @@ public partial class PowerInterpreter : MonoBehaviour
         _currentPowerEntityChoicesIndex = int.MaxValue;
         _currentPowerOptionsIndex = int.MaxValue;
 
-        _historyEntries = new ConcurrentQueue<IPowerHistoryEntry>();
-
         _btnStepper = _boardCanvas.transform.Find("Panel").Find("Buttons").Find("BtnStepper").GetComponent<Button>();
 
     }
 
+    public void Initialize()
+    {
+        PlayerState = PlayerClientState.None;
+
+        _historyEntries = new ConcurrentQueue<IPowerHistoryEntry>();
+
+        _allGameObjects = new List<GameObject>();
+
+        _entitiesExt = new Dictionary<int, EntityExt>();
+
+        if (_myManaGameObject != null)
+        {
+            Destroy(_myManaGameObject);
+        }
+        _myManaGameObject = Instantiate(ManaPrefab, _myMana.transform);
+
+        if (_opManaGameObject != null)
+        {
+            Destroy(_opManaGameObject);
+        }
+        _opManaGameObject = Instantiate(ManaPrefab, _opMana.transform);
+
+        _mainGame.transform.Find(GetParentObject("Board", 1)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Board", 2)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Deck", 1)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Deck", 2)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Hand", 1)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Hand", 2)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Play", 1)).GetComponent<CardContainer>().Clear();
+        _mainGame.transform.Find(GetParentObject("Play", 2)).GetComponent<CardContainer>().Clear();
+    }
+
     public void InitializeDebug()
     {
+        Initialize();
+
         SetPlayerAndUserInfo(1, null, null);
         _game = new Game(DruidVsWarrior(Seed));
         _gameStepper = DruidVsWarriorMoves;
@@ -171,6 +204,8 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public void InitializeReplay(string fileContent = "")
     {
+        Initialize();
+
         string[] allLines = null;
         if (fileContent.Length == 0)
         {
@@ -204,7 +239,7 @@ public partial class PowerInterpreter : MonoBehaviour
         SetPlayerAndUserInfo(gameData.PlayerId, userInfos.Where(p => p.PlayerId == gameData.PlayerId).First(), userInfos.Where(p => p.PlayerId != gameData.PlayerId).First());
     }
 
-    private bool ReplayGame()
+    private void ReplayGame()
     {
 
         while (_replayDataObjects.TryPeek(out GameData peekGameData)
@@ -215,7 +250,7 @@ public partial class PowerInterpreter : MonoBehaviour
             switch (gameData.GameDataType)
             {
                 case GameDataType.Initialisation:
-                    return false;
+                    return;
 
                 case GameDataType.PowerChoices:
                     var powerChoices = JsonConvert.DeserializeObject<PowerChoices>(gameData.GameDataObject);
@@ -240,7 +275,7 @@ public partial class PowerInterpreter : MonoBehaviour
                     break;
 
                 case GameDataType.Result:
-                    return false;
+                    return;
             }
         }
 
@@ -249,22 +284,14 @@ public partial class PowerInterpreter : MonoBehaviour
             var powerHistory = JsonConvert.DeserializeObject<List<IPowerHistoryEntry>>(gameHistoryData.GameDataObject, new PowerHistoryConverter());
             powerHistory.ForEach(p => _historyEntries.Enqueue(p));
         }
-
-        return !_replayDataObjects.IsEmpty;
     }
 
     public void OnClickStepByStep()
     {
         if (_replayDataObjects != null)
         {
-            if (ReplayGame())
-            {
-                return;
-            }
-            else
-            {
-                EndGameScreen();
-            }
+            ReplayGame();
+            return;
         }
 
         if (_gameStepper == null || _game == null)
@@ -297,9 +324,9 @@ public partial class PowerInterpreter : MonoBehaviour
         _btnStepper.interactable = true;
     }
 
-    private void EndGameScreen()
+    public void EndGameScreen()
     {
-        allGameObjects.ForEach(p =>
+        _allGameObjects.ForEach(p =>
         {
             Destroy(p);
         });
@@ -328,6 +355,11 @@ public partial class PowerInterpreter : MonoBehaviour
 
     public void Update()
     {
+        if (_historyEntries == null || _entitiesExt == null)
+        {
+            return;
+        }
+
         if (UpdateUserInfo)
         {
             _mainGame.transform.Find(GetParentObject("Stats", _playerId)).Find("AccountName").GetComponent<Text>().text = $"{_myUserInfo.AccountName}[{_myUserInfo.PlayerId}]";
@@ -400,7 +432,7 @@ public partial class PowerInterpreter : MonoBehaviour
         _powerEntityChoices.Entities.ForEach(p =>
         {
 
-            if (!EntitiesExt.TryGetValue(p, out EntityExt entityExt))
+            if (!_entitiesExt.TryGetValue(p, out EntityExt entityExt))
             {
                 throw new Exception($"Can't find entity with the id {p} in our dictionary!");
             }
@@ -408,7 +440,7 @@ public partial class PowerInterpreter : MonoBehaviour
             if (entityExt.CardId != "GAME_005")
             {
                 var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
-                allGameObjects.Add(gameObject);
+                _allGameObjects.Add(gameObject);
                 var cardGen = gameObject.GetComponent<CardGen>();
                 cardGen.Generate(entityExt);
                 _myChoicesPanel.GetComponent<CardContainer>().Add(gameObject);
@@ -500,7 +532,7 @@ public partial class PowerInterpreter : MonoBehaviour
 
     private void UpdateCreateGame(PowerHistoryCreateGame createGame)
     {
-        EntitiesExt.Add(createGame.Game.Id, new EntityExt()
+        _entitiesExt.Add(createGame.Game.Id, new EntityExt()
         {
             Id = createGame.Game.Id,
             CardId = "GAME",
@@ -508,7 +540,7 @@ public partial class PowerInterpreter : MonoBehaviour
             Tags = createGame.Game.Tags
         });
 
-        EntitiesExt.Add(createGame.Players[0].PowerEntity.Id, new EntityExt()
+        _entitiesExt.Add(createGame.Players[0].PowerEntity.Id, new EntityExt()
         {
             Id = createGame.Players[0].PowerEntity.Id,
             CardId = "PLAYER1",
@@ -516,7 +548,7 @@ public partial class PowerInterpreter : MonoBehaviour
             Tags = createGame.Players[0].PowerEntity.Tags
         });
 
-        EntitiesExt.Add(createGame.Players[1].PowerEntity.Id, new EntityExt()
+        _entitiesExt.Add(createGame.Players[1].PowerEntity.Id, new EntityExt()
         {
             Id = createGame.Players[1].PowerEntity.Id,
             CardId = "PLAYER2",
@@ -551,12 +583,12 @@ public partial class PowerInterpreter : MonoBehaviour
         Debug.Log(blockStart.Print());
         if (blockStart.BlockType == BlockType.PLAY && blockStart.Target != 0)
         {
-            if (!EntitiesExt.TryGetValue(blockStart.Source, out EntityExt sourceEntityExt))
+            if (!_entitiesExt.TryGetValue(blockStart.Source, out EntityExt sourceEntityExt))
             {
                 throw new Exception($"Can't find entity with the source id {blockStart.Source} in our dictionary!");
             }
 
-            if (!EntitiesExt.TryGetValue(blockStart.Target, out EntityExt targetEntityExt))
+            if (!_entitiesExt.TryGetValue(blockStart.Target, out EntityExt targetEntityExt))
             {
                 throw new Exception($"Can't find entity with the target id {blockStart.Target} in our dictionary!");
             }
@@ -574,7 +606,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private void UpdateTagChange(PowerHistoryTagChange tagChange)
     {
 
-        if (!EntitiesExt.TryGetValue(tagChange.EntityId, out EntityExt entityExt))
+        if (!_entitiesExt.TryGetValue(tagChange.EntityId, out EntityExt entityExt))
         {
             throw new Exception($"Can't find entity with the id {tagChange.EntityId} in our dictionary!");
         }
@@ -653,7 +685,7 @@ public partial class PowerInterpreter : MonoBehaviour
             case GameTag.RESOURCES_USED:
             case GameTag.TEMP_RESOURCES:
                 //Debug.Log("UPDATE_RESOURCES");
-                _mainGame.transform.Find(GetParentObject("Mana", entityExt)).transform.Find("Mana").GetComponent<ManaGen>().Update(entityExt);
+                _mainGame.transform.Find(GetParentObject("Mana", entityExt)).transform.Find("Mana(Clone)").GetComponent<ManaGen>().Update(entityExt);
                 break;
 
             case GameTag.CURRENT_PLAYER:
@@ -743,7 +775,7 @@ public partial class PowerInterpreter : MonoBehaviour
         {
             var heroParent = _mainGame.transform.Find(GetParentObject("Hero", entityExt));
             var gameObject = Instantiate(HeroPrefab, heroParent).gameObject;
-            allGameObjects.Add(gameObject);
+            _allGameObjects.Add(gameObject);
             var hero = gameObject.GetComponent<HeroGen>();
             hero.Generate(entityExt);
             entityExt.GameObjectScript = hero;
@@ -783,7 +815,7 @@ public partial class PowerInterpreter : MonoBehaviour
                         {
                             case CardType.MINION:
                                 gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
-                                allGameObjects.Add(gameObject);
+                                _allGameObjects.Add(gameObject);
                                 minionGen = gameObject.GetComponent<MinionGen>();
                                 minionGen.Generate(entityExt);
                                 entityExt.GameObjectScript = minionGen;
@@ -794,7 +826,7 @@ public partial class PowerInterpreter : MonoBehaviour
                             case CardType.WEAPON:
                                 var heroWeaponParent = _mainGame.transform.Find(GetParentObject("HeroWeapon", entityExt));
                                 gameObject = Instantiate(HeroWeaponPrefab, heroWeaponParent.transform).gameObject;
-                                allGameObjects.Add(gameObject);
+                                _allGameObjects.Add(gameObject);
                                 heroWeaponGen = gameObject.GetComponent<HeroWeaponGen>();
                                 heroWeaponGen.Generate(entityExt);
                                 entityExt.GameObjectScript = heroWeaponGen;
@@ -952,7 +984,7 @@ public partial class PowerInterpreter : MonoBehaviour
     {
         var heroWeaponParent = _mainGame.transform.Find(GetParentObject("HeroWeapon", entityExt));
         var gameObject = Instantiate(HeroWeaponPrefab, heroWeaponParent.transform).gameObject;
-        allGameObjects.Add(gameObject);
+        _allGameObjects.Add(gameObject);
         var heroWeaponGen = gameObject.GetComponent<HeroWeaponGen>();
         heroWeaponGen.Generate(entityExt);
         entityExt.GameObjectScript = heroWeaponGen;
@@ -961,7 +993,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private void CreateMinion(ref EntityExt entityExt)
     {
         var gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
-        allGameObjects.Add(gameObject);
+        _allGameObjects.Add(gameObject);
         var minionGen = gameObject.GetComponent<MinionGen>();
         minionGen.Generate(entityExt);
         entityExt.GameObjectScript = minionGen;
@@ -985,7 +1017,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private BasicGen createCardIn(Transform location, GameObject cardPrefab, EntityExt entityExt)
     {
         var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
-        allGameObjects.Add(gameObject);
+        _allGameObjects.Add(gameObject);
         var cardGen = gameObject.GetComponent<CardGen>();
         cardGen.Generate(entityExt);
         entityExt.GameObjectScript = cardGen;
@@ -996,7 +1028,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private BasicGen createCardIn(string location, GameObject cardPrefab, EntityExt entityExt)
     {
         var gameObject = Instantiate(CardPrefab, _mainGame.transform).gameObject;
-        allGameObjects.Add(gameObject);
+        _allGameObjects.Add(gameObject);
         var cardGen = gameObject.GetComponent<CardGen>();
         cardGen.Generate(entityExt);
         entityExt.GameObjectScript = cardGen;
@@ -1024,7 +1056,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private void UpdateHideEntity(PowerHistoryHideEntity entity)
     {
         Debug.Log("[Hide Entity]");
-        if (!EntitiesExt.TryGetValue(entity.EntityID, out EntityExt value))
+        if (!_entitiesExt.TryGetValue(entity.EntityID, out EntityExt value))
         {
             throw new Exception($"Can't find entity with the id {entity.EntityID} in our dictionary!");
         }
@@ -1034,7 +1066,7 @@ public partial class PowerInterpreter : MonoBehaviour
     private void UpdateShowEntity(PowerHistoryShowEntity showEntity)
     {
         //Debug.Log(showEntity.Print());
-        if (!EntitiesExt.TryGetValue(showEntity.Entity.Id, out EntityExt entity))
+        if (!_entitiesExt.TryGetValue(showEntity.Entity.Id, out EntityExt entity))
         {
             throw new Exception($"Can't find entity with the id {showEntity.Entity.Id} in our dictionary!");
         }
@@ -1105,7 +1137,7 @@ public partial class PowerInterpreter : MonoBehaviour
             Description = card != null ? card.Text : "missing",
             Tags = fullEntity.Entity.Tags
         };
-        EntitiesExt.Add(fullEntity.Entity.Id, entityExt);
+        _entitiesExt.Add(fullEntity.Entity.Id, entityExt);
 
         CardType cardType = entityExt.Tags.ContainsKey(GameTag.CARDTYPE) ? (CardType)entityExt.Tags[GameTag.CARDTYPE] : CardType.INVALID;
 
@@ -1123,7 +1155,7 @@ public partial class PowerInterpreter : MonoBehaviour
                     case CardType.HERO_POWER:
                         var heroPowerParent = _mainGame.transform.Find(GetParentObject("HeroPower", entityExt));
                         gameObject = Instantiate(HeroPowerPrefab, heroPowerParent).gameObject;
-                        allGameObjects.Add(gameObject);
+                        _allGameObjects.Add(gameObject);
                         var heroPower = gameObject.GetComponent<HeroPowerGen>();
                         heroPower.Generate(entityExt);
                         entityExt.GameObjectScript = heroPower;
@@ -1132,7 +1164,7 @@ public partial class PowerInterpreter : MonoBehaviour
                     // Summon Minion
                     case CardType.MINION:
                         gameObject = Instantiate(MinionPrefab, _mainGame.transform).gameObject;
-                        allGameObjects.Add(gameObject);
+                        _allGameObjects.Add(gameObject);
                         var minionGen = gameObject.GetComponent<MinionGen>();
                         minionGen.Generate(entityExt);
                         entityExt.GameObjectScript = minionGen;

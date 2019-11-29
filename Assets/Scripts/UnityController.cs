@@ -220,6 +220,11 @@ public class UnityController : MonoBehaviour
         PowerInterpreter.InitializeReplay(path.Length != 0 ? File.ReadAllText(path) : string.Empty);
     }
 
+    public void OnClickQuit()
+    {
+        PowerInterpreter.EndGameScreen();
+    }
+
     public void OnClickPreparedOkay()
     {
         if (_deckStringInput.text != string.Empty)
